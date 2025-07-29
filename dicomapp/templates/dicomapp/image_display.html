@@ -1,371 +1,4 @@
-{% comment %} 
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Images from ZIP</title>
-    
-    <!-- CornerstoneJS CDN -->
-    <script src="https://unpkg.com/cornerstone-core"></script>
-    <script src="https://unpkg.com/cornerstone-tools"></script>
-    <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
-    <!-- DICOM Parser -->
-    <script src="https://unpkg.com/dicom-parser"></script>
-
-    <!-- Bootstrap CDN for dropdown -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons for zoom icon -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-</head>
-<body>
-    <h1>Images from ZIP</h1>
-
-    <!-- DICOM Thumbnails Container -->
-    <div class="dicom-thumbnails" style="display: flex; flex-wrap: wrap;"></div>
-
-    <!-- Image Thumbnails Section -->
-    <h3>Images & DICOM Files</h3>
-    <div class="thumbnails">
-        {% for image in images %}
-            <img src="/media/{{ image }}" class="thumbnail" style="width: 100px; height: 100px; margin: 10px; cursor: pointer;" id="thumbnail-{{ forloop.counter }}" onclick="changeImage('/media/{{ image }}', 'thumbnail-{{ forloop.counter }}')">
-        {% endfor %}
-    </div>
-
-    <!-- Zoom Icon and Dropdown Menu -->
-    <div class="controls-container" style="display: flex; gap: 50px; margin-top: 20px;">
-        <!-- Zoom Icon and Dropdown Menu -->
-        <div class="zoom-container">
-            <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer;" onclick="toggleZoomMenu()"></i>
-            
-            <!-- Zoom Dropdown Menu -->
-            <div id="zoom-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
-                <a class="dropdown-item" href="#" onclick="setZoom(50)">Zoom in 50%</a>
-                <a class="dropdown-item" href="#" onclick="setZoom(-50)">Zoom out 50%</a>
-                <a class="dropdown-item" href="#" onclick="setZoom(50)">50%</a> <!-- Added the Zoom 50% option -->
-                <a class="dropdown-item" href="#" onclick="setZoom(100)">100%</a>
-            </div>
-        </div>
-
-        <!-- Ruler Icon and Dropdown Menu for Drawing/Erasing Lines -->
-        <div class="ruler-container">
-            <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer;" onclick="toggleRulerMenu()"></i>
-            
-            <!-- Ruler Dropdown Menu -->
-            <div id="ruler-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
-                <a class="dropdown-item" href="#" onclick="setMode('draw')">Draw Line</a>
-                <a class="dropdown-item" href="#" onclick="setMode('erase')">Erase Lines</a>
-            </div>
-        </div>
-    </div>
-
-
-    <!-- Main Image Section -->
-    <div class="main-image" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; height: 400px;">
-        <img id="main-image" src="" alt="Main Image" style="max-width: 400px; height: auto;">
-    </div>
-
-
-    <script>
-        // Function to change the main image when a thumbnail is clicked
-        function changeImage(imageSrc, thumbnailId) {
-            console.log("Changing main image to: " + imageSrc);
-
-            var mainImageElement = document.getElementById('main-image');
-            if (mainImageElement) {
-                // Add timestamp to bypass cache
-                mainImageElement.src = imageSrc + "?t=" + new Date().getTime();
-            }
-
-            // Highlight the clicked thumbnail
-            var allThumbnails = document.getElementsByClassName('thumbnail');
-            for (var i = 0; i < allThumbnails.length; i++) {
-                allThumbnails[i].style.border = "";  // Remove border from all thumbnails
-            }
-
-            // Add a border to the clicked thumbnail
-            document.getElementById(thumbnailId).style.border = "2px solid blue";
-        }
-
-        // Toggle the visibility of the zoom dropdown menu
-        // Toggle the visibility of the zoom dropdown menu
-        function toggleZoomMenu() {
-            var menu = document.getElementById("zoom-menu");
-            if (menu.style.display === "none" || menu.style.display === "") {
-                menu.style.display = "block";
-            } else {
-                menu.style.display = "none";
-            }
-        }
-
-        // Function to set the zoom level of the main image
-        function setZoom(percentage) {
-            var mainImageElement = document.getElementById('main-image');
-            if (mainImageElement) {
-                var currentWidth = mainImageElement.width;
-                var currentHeight = mainImageElement.height;
-
-                // Zooming in or zooming out
-                if (percentage === 100) {
-                    // Reset to original size (default width: 400px, height auto)
-                    mainImageElement.style.width = "400px";
-                    mainImageElement.style.height = "auto";
-                } else if (percentage > 0) {
-                    // Zoom in
-                    mainImageElement.style.width = currentWidth + (currentWidth * (percentage / 100)) + "px";  // Zoom in
-                    mainImageElement.style.height = currentHeight + (currentHeight * (percentage / 100)) + "px";  // Zoom in
-                } else {
-                    // Zoom out
-                    mainImageElement.style.width = currentWidth + (currentWidth * (percentage / 100)) + "px";  // Zoom out
-                    mainImageElement.style.height = currentHeight + (currentHeight * (percentage / 100)) + "px";  // Zoom out
-                }
-            }
-
-            // Close the zoom dropdown menu after selection
-            var menu = document.getElementById("zoom-menu");
-            menu.style.display = "none";  // Close the dropdown
-        }
-        function toggleRulerMenu() {
-            var menu = document.getElementById("ruler-menu");
-            if (menu.style.display === "none" || menu.style.display === "") {
-                menu.style.display = "block";
-            } else {
-                menu.style.display = "none";
-            }
-        }
-
-        // Set the mode (draw or erase)
-        function setMode(mode) {
-            console.log("Selected mode: " + mode);
-
-            if (mode === "draw") {
-                // Enable drawing mode
-                alert("Drawing mode enabled");
-                // Implement drawing logic here (using canvas or another tool)
-            } else if (mode === "erase") {
-                // Enable erase mode
-                alert("Erase mode enabled");
-                // Implement erase logic here (clear drawn lines)
-            }
-
-            // Close the ruler menu after selection
-            var menu = document.getElementById("ruler-menu");
-            menu.style.display = "none";  // Close the dropdown
-        }
-
-    </script>
-
-    <!-- Bootstrap JS (for dropdown functionality) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html> {% endcomment %}
-
-
-{% comment %} <!DOCTYPE html> 
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Images from ZIP</title>
-    
-    <!-- Bootstrap CDN for dropdown -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Bootstrap Icons for zoom icon -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
-    
-    <!-- CornerstoneJS CDN -->
-    <script src="https://unpkg.com/cornerstone-core"></script>
-    <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
-    <!-- DICOM Parser -->
-    <script src="https://unpkg.com/dicom-parser"></script>
-    
-</head>
-<body>
-    <h1>Images from ZIP</h1>
-
-    <!-- DICOM Thumbnails Container -->
-    <div class="dicom-thumbnails" style="display: flex; flex-wrap: wrap;"></div>
-
-    <!-- Image Thumbnails Section -->
-    <h3>Images & DICOM Files</h3>
-    <div class="thumbnails">
-        {% for image in images %}
-            <img src="/media/{{ image }}" class="thumbnail" style="width: 100px; height: 100px; margin: 10px; cursor: pointer;" id="thumbnail-{{ forloop.counter }}" onclick="changeImage('/media/{{ image }}', 'thumbnail-{{ forloop.counter }}')">
-        {% endfor %}
-    </div>
-
-    <!-- Controls Container: Zoom and Ruler Icons -->
-    <div class="controls-container" style="display: flex; gap: 50px; margin-top: 20px;">
-        <!-- Zoom Icon and Dropdown Menu -->
-        <div class="zoom-container">
-            <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer;" onclick="toggleZoomMenu()"></i>
-            
-            <!-- Zoom Dropdown Menu -->
-            <div id="zoom-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
-                <a class="dropdown-item" href="#" onclick="setZoom(50)">Zoom in 50%</a>
-                <a class="dropdown-item" href="#" onclick="setZoom(-50)">Zoom out 50%</a>
-                <a class="dropdown-item" href="#" onclick="setZoom(50)">50%</a>
-                <a class="dropdown-item" href="#" onclick="setZoom(100)">100%</a>
-            </div>
-        </div>
-
-        <!-- Ruler Icon and Dropdown Menu for Drawing/Erasing Lines -->
-        <div class="ruler-container">
-            <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer;" onclick="toggleRulerMenu()"></i>
-            
-            <!-- Ruler Dropdown Menu -->
-            <div id="ruler-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
-                <a class="dropdown-item" href="#" onclick="setMode('draw')">Draw Line</a>
-                <a class="dropdown-item" href="#" onclick="setMode('erase')">Erase Lines</a>
-            </div>
-        </div>
-    </div>
-
-    <!-- Main Image Section -->
-    <div class="main-image" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; height: 400px;">
-        <div id="image-container" style="position: relative; width: 400px; height: auto;">
-            <img id="main-image" src="" alt="Main Image" style="max-width: 400px; height: auto;">
-            <canvas id="canvas" style="position: absolute; top: 0; left: 0;"></canvas>
-        </div>
-    </div>
-
-    <script>
-        // Global variables for drawing and mode selection
-        var drawMode = 'none'; // 'draw' or 'erase'
-        var canvas = document.getElementById('canvas');
-        var ctx = canvas.getContext('2d');
-        var mainImageElement = document.getElementById('main-image');
-        var imageContainer = document.getElementById('image-container');
-        var imageElement;
-        var startX, startY, endX, endY;
-
-        // Set up image loading with Cornerstone
-        cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
-        cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
-
-        // Change the image when a thumbnail is clicked
-        function changeImage(imageSrc, thumbnailId) {
-            var mainImageElement = document.getElementById('main-image');
-            mainImageElement.src = imageSrc + "?t=" + new Date().getTime();
-            loadImage(imageSrc); // Reload image with Cornerstone
-        }
-
-        // Load image into Cornerstone
-        function loadImage(imageSrc) {
-            cornerstone.loadImage(imageSrc).then(function(image) {
-                imageElement = image;
-                cornerstone.displayImage(imageContainer, image);
-                canvas.width = imageElement.width;
-                canvas.height = imageElement.height;
-            });
-        }
-
-        // Set the mode (draw or erase)
-        function setMode(mode) {
-            drawMode = mode;
-            if (mode === 'draw') {
-                alert("Drawing mode enabled");
-            } else if (mode === 'erase') {
-                alert("Erase mode enabled");
-                clearCanvas(); // Clear the canvas if erase mode is selected
-            }
-            var menu = document.getElementById("ruler-menu");
-            menu.style.display = "none"; // Close the dropdown
-        }
-
-        // Clear the canvas (erase all lines)
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-        }
-
-        // Drawing logic on mouse events
-        canvas.addEventListener('mousedown', function(event) {
-            if (drawMode === 'draw') {
-                startX = event.offsetX;
-                startY = event.offsetY;
-                ctx.beginPath();
-                ctx.moveTo(startX, startY);
-                canvas.addEventListener('mousemove', drawLine);
-            }
-        });
-
-        canvas.addEventListener('mouseup', function(event) {
-            if (drawMode === 'draw') {
-                endX = event.offsetX;
-                endY = event.offsetY;
-                drawLine(event);
-                calculateDistance(startX, startY, endX, endY);
-                canvas.removeEventListener('mousemove', drawLine);
-            }
-        });
-
-        // Draw the line
-        function drawLine(event) {
-            if (drawMode === 'draw') {
-                ctx.lineTo(event.offsetX, event.offsetY);
-                ctx.stroke();
-            }
-        }
-
-        // Function to calculate the distance between two points
-        function calculateDistance(x1, y1, x2, y2) {
-            var dx = x2 - x1;
-            var dy = y2 - y1;
-            var distance = Math.sqrt(dx * dx + dy * dy).toFixed(2); // Pythagorean theorem
-            displayDistance(distance, x2, y2);
-        }
-
-        // Display the distance on the canvas
-        function displayDistance(distance, x, y) {
-            ctx.fillStyle = "red";
-            ctx.font = "14px Arial";
-            ctx.fillText(distance + " px", x + 10, y);
-        }
-
-        // Zoom logic
-        function toggleZoomMenu() {
-            var menu = document.getElementById("zoom-menu");
-            menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
-        }
-
-        // Set the zoom level of the main image
-        function setZoom(percentage) {
-            var currentWidth = mainImageElement.width;
-            var currentHeight = mainImageElement.height;
-
-            if (percentage === 100) {
-                mainImageElement.style.width = "400px";
-                mainImageElement.style.height = "auto";
-            } else if (percentage > 0) {
-                mainImageElement.style.width = currentWidth + (currentWidth * (percentage / 100)) + "px";
-                mainImageElement.style.height = currentHeight + (currentHeight * (percentage / 100)) + "px";
-            } else {
-                mainImageElement.style.width = currentWidth + (currentWidth * (percentage / 100)) + "px";
-                mainImageElement.style.height = currentHeight + (currentHeight * (percentage / 100)) + "px";
-            }
-        }
-
-        // Toggle Ruler Menu visibility
-        function toggleRulerMenu() {
-            var menu = document.getElementById("ruler-menu");
-            if (menu.style.display === "none" || menu.style.display === "") {
-                menu.style.display = "block";
-            } else {
-                menu.style.display = "none";
-            }
-        }
-
-    </script>
-
-    <!-- Bootstrap JS (for dropdown functionality) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-
-</body>
-</html> {% endcomment %}
 
 
 
@@ -549,7 +182,8 @@
             } else if (mode === 'ellipse') {
                 alert("Ellipse mode enabled");
                 console.log("Ellipse mode enabled");
-                canvas.style.cursor = "crosshair"; // Crosshair for ellipse drawing
+                canvas.style.cursor = "crosshair";
+                isEllipseAdded = false; // Crosshair for ellipse drawing
             } else if (mode === 'rectangle') {
                 alert("Rectangle mode enabled");
                 canvas.style.cursor = "crosshair"; // Crosshair for rectangle drawing
@@ -568,15 +202,19 @@
         function clearCanvas() {
             console.log("Clearing canvas...");
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
+           
             redrawCanvas(); // Ensure canvas is completely cleared
         }
         // Erase all lines
         function eraseAllLines() {
             console.log("Erasing all lines...");
+            console.log("Lines array before clearing:", lines);
+            console.log("Ellipses array before clearing:", ellipses);
+            console.log("Rectangles array before clearing:", rectangles);
             lines = []; // Clear lines array
             ellipses = []; // Clear ellipses array
             rectangles = []; // Clear rectangles array (Ensure it's cleared)
+            distanceMarkers = [];
             console.log("Lines array after clearing:", lines);
             console.log("Ellipses array after clearing:", ellipses);
             console.log("Rectangles array after clearing:", rectangles);
@@ -606,10 +244,11 @@
                 }
             } else if (drawMode === 'ellipse') {
                 // Ellipse Drawing Mode
+                isEllipseAdded = false;
                 startX = event.offsetX;
                 startY = event.offsetY;
                 ctx.beginPath(); // Start the ellipse drawing
-                console.log("Ellipse drawing started at: ", event.offsetX, event.offsetY);
+                console.log("Ellipse drawing started at: ", startX, startY);
             } else if (drawMode === 'rectangle' && !eraseMode) {
                 // Rectangle Drawing Mode
                 startX = event.offsetX;
@@ -660,39 +299,46 @@
 
                 // Log the current value of isEllipseAdded before resetting
                 console.log("isEllipseAdded before reset:", isEllipseAdded);
+                // Log the start and end points before drawing
+                console.log(`StartX: ${startX}, StartY: ${startY}, EndX: ${endX}, EndY: ${endY}`);
 
-                // Reset the flag before checking for duplicates
-                isEllipseAdded = false;
+                // Prevent duplicate ellipses from being added to the array
+                if (isEllipseAdded) {
+                    console.log("Ellipse already added, skipping.");
+                    return; // Exit if an ellipse is already added
+                }
 
-                console.log("isEllipseAdded after reset:", isEllipseAdded);
+                endX = event.offsetX;
+                endY = event.offsetY;
+                console.log("Ellipse drawing ended at: ", endX, endY);
 
-                if (!isEllipseAdded) {
-                    endX = event.offsetX;
-                    endY = event.offsetY;
-                    console.log("Ellipse drawing ended at: ", event.offsetX, event.offsetY);
-
-                    // Check if the ellipse already exists in the array to prevent duplicates
-                    let isDuplicate = false;
-                    for (let i = 0; i < ellipses.length; i++) {
-                        let ellipse = ellipses[i];
-                        if (ellipse.startX === startX && ellipse.startY === startY && ellipse.endX === endX && ellipse.endY === endY) {
-                            isDuplicate = true;
-                            break;
-                        }
-                    }
-
-                    console.log("isDuplicate status:", isDuplicate);
-
-                    if (!isDuplicate) {
-                        drawEllipse(startX, startY, endX, endY); // Draw the ellipse
-                        ellipses.push({ startX, startY, endX, endY }); // Store the ellipse if it's not a duplicate
-                        console.log("Ellipses array after drawing: ", ellipses); // Debugging line
-                        isEllipseAdded = true;  // Prevent adding again
-                        console.log("Ellipse added successfully, isEllipseAdded:", isEllipseAdded); // After adding ellipse
-                    } else {
-                        console.log("Duplicate ellipse detected, not adding.");
+                // Check if the ellipse already exists in the array to prevent duplicates
+                let isDuplicate = false;
+                for (let i = 0; i < ellipses.length; i++) {
+                    let ellipse = ellipses[i];
+                       // Use a tolerance to avoid duplicate checking based on slight differences in coordinates
+                    const tolerance = 5;
+                    if (Math.abs(ellipse.startX - startX) <= tolerance &&
+                        Math.abs(ellipse.startY - startY) <= tolerance &&
+                        Math.abs(ellipse.endX - endX) <= tolerance &&
+                        Math.abs(ellipse.endY - endY) <= tolerance) {
+                        isDuplicate = true;
+                        break;
                     }
                 }
+
+                if (!isDuplicate) {
+                    // Draw the ellipse and add it to the array
+                    console.log("Adding ellipse to the array:", { startX, startY, endX, endY });
+                    drawEllipse(startX, startY, endX, endY);
+                    ellipses.push({ startX, startY, endX, endY });
+                    console.log("Ellipse added successfully:", ellipses);
+                    isEllipseAdded = true;  // Flag set to prevent further additions until next draw
+                } else {
+                    console.log("Duplicate ellipse detected, not adding.");
+                }
+               
+            
 
             } else if (drawMode === 'rectangle' && selectedRectangle && !selectedRectangle.resizing) {
                 // Store the rectangle data after drawing
@@ -703,21 +349,7 @@
                 redrawCanvas(); // Redraw the entire canvas
             }
         });
-        {% comment %} function drawEllipse(x1, y1, x2, y2) {
-            var radiusX = Math.abs(x2 - x1) / 2;
-            var radiusY = Math.abs(y2 - y1) / 2;
-            var centerX = (x1 + x2) / 2;
-            var centerY = (y1 + y2) / 2;
-
-            // Store the ellipse data
-            ellipses.push({ centerX, centerY, radiusX, radiusY });
-
-            ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2); // Draw ellipse
-            ctx.stroke(); // Outline the ellipse
-
-            // Optionally, show ellipse data on the canvas
-            displayEllipseData(centerX, centerY, radiusX, radiusY);
-        } {% endcomment %}
+        
         function drawEllipse(x1, y1, x2, y2) {
             var radiusX = Math.abs(x2 - x1) / 2;
             var radiusY = Math.abs(y2 - y1) / 2;
@@ -726,6 +358,7 @@
 
             // Store the ellipse data
             ellipses.push({ startX: x1, startY: y1, endX: x2, endY: y2 });
+            console.log("Ellipses array after adding ellipse:", ellipses);
 
             // Draw the ellipse
             ctx.beginPath();
@@ -758,10 +391,7 @@
             var dashLength = 5; // Length of the dashes
             var gapLength = 5; // Gap between dashes
 
-            // Set the color of the line to yellow
-            // ctx.strokeStyle = "yellow";  
-            // ctx.fillStyle = "yellow";    
-
+            
 
             // Draw dashed line
             ctx.beginPath();
@@ -865,62 +495,10 @@
         }
 
 
-                // Function to calculate the distance between two points
-        // function calculateDistance(x1, y1, x2, y2) {
-        //     var dx = x2 - x1;
-        //     var dy = y2 - y1;
-        //     var distance = Math.sqrt(dx * dx + dy * dy).toFixed(2); // Pythagorean theorem
-        //     displayDistance(distance, x2, y2);
-        // }
-
-        // // Display the distance on the canvas
-        // function displayDistance(distance, x, y) {
-        //     ctx.fillStyle = "red";
-        //     ctx.font = "14px Arial";
-        //     ctx.fillText(distance + " px", x + 10, y);
-        // }
+       
         var dpi = 96;  // Standard screen DPI (for most monitors)
 
-        // Function to calculate the distance between two points
-        {% comment %} function calculateDistance(x1, y1, x2, y2) {
-            var dx = x2 - x1;
-            var dy = y2 - y1;
-            var distanceInPixels = Math.sqrt(dx * dx + dy * dy); // Distance in pixels
-            var distanceInMM = (distanceInPixels / dpi) * 25.4; // Convert pixels to millimeters
-            displayDistance(distanceInMM.toFixed(2), x2, y2); // Display distance in mm
-        } {% endcomment %}
-
-        // Display the distance on the canvas (in mm)
-        // Function to display the distance on the canvas (in mm)
-        {% comment %} function displayDistance(distance, x, y) {
-            ctx.fillStyle = "red";
-            ctx.font = "14px Arial";
-
-            // Calculate the width and height of the text to avoid it going off the canvas
-            var textWidth = ctx.measureText(distance + " mm").width;
-            var textHeight = 14; // Approximate height of the text (14px font)
-
-            // Shift the text outside the image area if needed
-            var offsetX = 10; // Optional offset to the right for better visibility
-            var offsetY = 10; // Optional offset to the bottom for better visibility
-
-            // If the distance is near the right edge of the image, place the text to the right
-            if (x + textWidth + offsetX > canvas.width) {
-                x = x - textWidth - offsetX; // Move the text left if it's going out of bounds
-            } else {
-                x = x + offsetX; // Otherwise, keep it inside or move it slightly to the right
-            }
-
-            // If the distance is near the bottom edge of the image, place the text below
-            if (y + textHeight + offsetY > canvas.height) {
-                y = y - textHeight - offsetY; // Move the text up if it's going out of bounds
-            } else {
-                y = y + offsetY; // Otherwise, keep it inside or move it slightly below
-            }
-
-            // Display the distance in mm
-            ctx.fillText(distance + " mm", x, y);
-        } {% endcomment %}
+        
         var distanceMarkers = []; // Array to store distance markers
 
         // Add distance marker
@@ -1004,123 +582,7 @@
         }
 
 
-        // Redraw all lines on the canvas after erasing
-        {% comment %} function redrawCanvas() {
-            // Redraw image and clear canvas first
-            
-            
-            // Redraw the base image
-            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);
-
-            
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i];
-                if (line.type === 'line') {
-                    ctx.beginPath();
-                    ctx.moveTo(line.startX, line.startY);
-                    ctx.lineTo(line.endX, line.endY);
-                    ctx.stroke();
-                } else if (line.type === 'arrow') {
-                    drawDashedArrow(line.startX, line.startY, line.endX, line.endY);
-                }
-            }
-            // Redraw all ellipses
-            for (var i = 0; i < ellipses.length; i++) {
-                console.log("anu")
-                var ellipse = ellipses[i];
-                console.log("anu1")
-                drawEllipse(ellipse.startX, ellipse.startY, ellipse.endX, ellipse.endY);
-            }
-            for (let i = 0; i < rectangles.length; i++) {
-                let rect = rectangles[i];
-                ctx.beginPath();
-                ctx.rect(rect.startX, rect.startY, rect.endX - rect.startX, rect.endY - rect.startY);
-                ctx.strokeStyle = 'red';
-                ctx.stroke();
-                var width = Math.abs(rect.endX - rect.startX);
-                var height = Math.abs(rect.endY - rect.startY);
-                var area = (width * height) / (96 * 96); // Assuming 96 DPI
-
-                ctx.fillStyle = "brown";
-                ctx.font = "14px Arial";
-                ctx.fillText(`Width: ${width}px`, rect.startX + 5, rect.startY - 5);
-                ctx.fillText(`Height: ${height}px`, rect.startX + 5, rect.startY + 15);
-                ctx.fillText(`Area: ${area.toFixed(3)} cm²`, rect.startX + 5, rect.startY + 35);
-
-                drawResizeCorners(rect);
-            }
-        } {% endcomment %}
-        {% comment %} function redrawCanvas() {
-            console.log("Clearing canvas to redraw all elements...");
-            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas to avoid any old data remaining
-
-            console.log("Redrawing the base image...");
-            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw the base image
-
-            isEllipseAdded = false; 
-
-            // Debugging: Log the number of lines, ellipses, and rectangles before redrawing
-            console.log("Redrawing lines... Total lines:", lines.length);
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i];
-                console.log(`Redrawing line ${i}:`, line);  // Log the data of each line being drawn
-                if (line.type !== 'arrow') {  // If it's not an arrow, draw a regular line
-                    ctx.beginPath();
-                    ctx.moveTo(line.startX, line.startY);
-                    ctx.lineTo(line.endX, line.endY);
-                    ctx.strokeStyle = 'black'; // Set the line color to black for visibility
-                    ctx.lineWidth = 2;  // Set line width for better visibility
-                    ctx.stroke();
-                }
-            }
-            for (var i = 0; i < lines.length; i++) {
-                var line = lines[i];
-                if (line.type === 'arrow') {
-                    console.log(`Redrawing arrow ${i}:`, line);  // Log the data of each arrow being drawn
-                    drawDashedArrow(line.startX, line.startY, line.endX, line.endY);  // Draw the dashed arrow
-                }
-            }
-            // Redraw all ellipses (if any)
-            console.log("Redrawing ellipses... Total ellipses:", ellipses.length);
-            for (var i = 0; i < ellipses.length; i++) {
-                var ellipse = ellipses[i];
-                console.log(`Redrawing ellipse ${i}:`, ellipse);  // Log the data of each ellipse being drawn
-                drawEllipse(ellipse.startX, ellipse.startY, ellipse.endX, ellipse.endY);
-            }
-
-            // Redraw all rectangles (if any)
-            console.log("Redrawing rectangles... Total rectangles:", rectangles.length);
-            for (let i = 0; i < rectangles.length; i++) {
-                let rect = rectangles[i];
-                console.log(`Redrawing rectangle ${i}:`, rect);  // Log the data of each rectangle being drawn
-                ctx.beginPath();
-                ctx.rect(rect.startX, rect.startY, rect.endX - rect.startX, rect.endY - rect.startY);
-                ctx.strokeStyle = 'red'; // Set the rectangle color to red
-                ctx.lineWidth = 2;  // Set line width for better visibility
-                ctx.stroke();
-                var width = Math.abs(rect.endX - rect.startX);
-                var height = Math.abs(rect.endY - rect.startY);
-                var area = (width * height) / (96 * 96); // Assuming 96 DPI
-
-                ctx.fillStyle = "brown";
-                ctx.font = "14px Arial";
-                ctx.fillText(`Width: ${width}px`, rect.startX + 5, rect.startY - 5);
-                ctx.fillText(`Height: ${height}px`, rect.startX + 5, rect.startY + 15);
-                ctx.fillText(`Area: ${area.toFixed(3)} cm²`, rect.startX + 5, rect.startY + 35);
-            }
-
-            // Redraw all distance markers (if any)
-            console.log("Redrawing distance markers... Total markers:", distanceMarkers.length);
-            for (var i = 0; i < distanceMarkers.length; i++) {
-                var marker = distanceMarkers[i];
-                console.log(`Redrawing distance marker ${i}:`, marker);  // Log the data of each distance marker
-                displayDistance(marker.distance, marker.x, marker.y);
-            }
-
-            console.log("Canvas redrawn successfully.");
-            // Reset isEllipseAdded to allow drawing a new ellipse
-            isEllipseAdded = false;
-        } {% endcomment %}
+        
         function redrawCanvas() {
             console.log("Clearing canvas to redraw all elements...");
             ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas to avoid any old data remaining
@@ -1154,7 +616,7 @@
                 }
             }
 
-            console.log("Redrawing ellipses... Total ellipses:", ellipses.length);
+            console.log("Redrawing ellipses... Total ellipses before redrawing:", ellipses.length);
             for (var i = 0; i < ellipses.length; i++) {
                 var ellipse = ellipses[i];
                 console.log(`Redrawing ellipse ${i}:`, ellipse);
@@ -1164,12 +626,21 @@
             console.log("Redrawing rectangles... Total rectangles:", rectangles.length);
             for (let i = 0; i < rectangles.length; i++) {
                 let rect = rectangles[i];
-                console.log(`Redrawing rectangle ${i}:`, rect);
+                console.log(`Redrawing rectangle ${i}:`, rect);  // Log the data of each rectangle being drawn
                 ctx.beginPath();
                 ctx.rect(rect.startX, rect.startY, rect.endX - rect.startX, rect.endY - rect.startY);
-                ctx.strokeStyle = 'red';
-                ctx.lineWidth = 2;
+                ctx.strokeStyle = 'red'; // Set the rectangle color to red
+                ctx.lineWidth = 2;  // Set line width for better visibility
                 ctx.stroke();
+                var width = Math.abs(rect.endX - rect.startX);
+                var height = Math.abs(rect.endY - rect.startY);
+                var area = (width * height) / (96 * 96); // Assuming 96 DPI
+
+                ctx.fillStyle = "brown";
+                ctx.font = "14px Arial";
+                ctx.fillText(`Width: ${width}px`, rect.startX + 5, rect.startY - 5);
+                ctx.fillText(`Height: ${height}px`, rect.startX + 5, rect.startY + 15);
+                ctx.fillText(`Area: ${area.toFixed(3)} cm²`, rect.startX + 5, rect.startY + 35);
             }
 
             console.log("Canvas redrawn successfully.");
@@ -1382,46 +853,7 @@
         }
 
 
-        // Function to zoom to 50% of the current size (decrease size to 50% of the current size)
-        {% comment %} function zoomTo50() {
-            var mainImageElement = document.getElementById("main-image");
-
-            // Get current width and height of the image
-            
-
-            // Calculate the target size at 50% of the original size
-            var targetWidth = originalWidth * 0.5;
-            var targetHeight = originalHeight * 0.5;
-
-            // Apply the target width and height to the image
-            mainImageElement.style.width = targetWidth + "px";
-            mainImageElement.style.height = targetHeight + "px";
-
-            // Update the current zoom level to reflect 50%
-            currentZoomLevel = 50;  // This should be fixed at 50%
-        }
-
-        // Function to reset to original size (100%)
-        function resetZoom() {
-            var mainImageElement = document.getElementById("main-image");
-            mainImageElement.style.width = originalWidth + "px";  // Set to original width
-            mainImageElement.style.height = originalHeight + "px"; // Set to original height
-            canvas.width = originalWidth;  // Reset canvas width
-            canvas.height = originalHeight;  // Reset canvas height
-            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
-            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
-            redrawCanvas();  // Redraw all lines, ellipses, etc.
-        }
-        function resetZoom1() {
-            var mainImageElement = document.getElementById("main-image");
-            mainImageElement.style.width = "400px";  // Reset to original width
-            mainImageElement.style.height = "auto"; // Reset to original height
-            canvas.width = 400;  // Reset canvas width
-            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
-            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
-            redrawCanvas();  // Redraw all lines, ellipses, etc.
-        } {% endcomment %}
-
+        
 
         // Toggle Ruler Menu visibility
         function toggleRulerMenu() {
@@ -1438,31 +870,7 @@
                 rulerMenu.style.display = "block";
             }
         }
-        {% comment %} function downloadImage() {
-            console.log("Download button clicked");
-            var canvas = document.getElementById('canvas');
-            var ctx = canvas.getContext('2d');
-            // Clear the canvas and redraw the image and drawings once
-            
-            
-            // Redraw the image on the canvas
-            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height); // Redraw the image
-            console.log("Image redrawn");
-            redrawCanvas();
-            console.log("Image with lines, ellipses, and rectangles redrawn");
-            
-            // Export the current content of the canvas (which includes both the image and the drawings)
-            var imageURL = canvas.toDataURL("image/png");
-            console.log("Image URL generated");
-
-            // Create a temporary link element to trigger the download
-            var link = document.createElement('a');
-            link.href = imageURL;  // Set the href to the image data
-            link.download = 'image_with_drawings.png';  // Set the default filename
-            console.log("Download link created");
-            link.click();  // Trigger the click event to download the image
-            console.log("Download triggered");
-        } {% endcomment %}
+        
         function downloadImage() {
             console.log("Download button clicked");
             
@@ -1489,6 +897,12 @@
             redrawCanvas();
 
             console.log("Image with lines, ellipses, and rectangles redrawn");
+            for (var i = 0; i < distanceMarkers.length; i++) {
+                var marker = distanceMarkers[i];
+                console.log(`Redrawing distance marker ${i}:`, marker);  // Log the data of each distance marker
+                displayDistance(marker.distance, marker.x, marker.y);
+            }
+
 
             // Export the current content of the canvas (which includes both the image and the drawings)
             var imageURL = canvas.toDataURL("image/png");
