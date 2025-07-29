@@ -1,0 +1,1618 @@
+{% comment %} 
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images from ZIP</title>
+    
+    <!-- CornerstoneJS CDN -->
+    <script src="https://unpkg.com/cornerstone-core"></script>
+    <script src="https://unpkg.com/cornerstone-tools"></script>
+    <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
+    <!-- DICOM Parser -->
+    <script src="https://unpkg.com/dicom-parser"></script>
+
+    <!-- Bootstrap CDN for dropdown -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons for zoom icon -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body>
+    <h1>Images from ZIP</h1>
+
+    <!-- DICOM Thumbnails Container -->
+    <div class="dicom-thumbnails" style="display: flex; flex-wrap: wrap;"></div>
+
+    <!-- Image Thumbnails Section -->
+    <h3>Images & DICOM Files</h3>
+    <div class="thumbnails">
+        {% for image in images %}
+            <img src="/media/{{ image }}" class="thumbnail" style="width: 100px; height: 100px; margin: 10px; cursor: pointer;" id="thumbnail-{{ forloop.counter }}" onclick="changeImage('/media/{{ image }}', 'thumbnail-{{ forloop.counter }}')">
+        {% endfor %}
+    </div>
+
+    <!-- Zoom Icon and Dropdown Menu -->
+    <div class="controls-container" style="display: flex; gap: 50px; margin-top: 20px;">
+        <!-- Zoom Icon and Dropdown Menu -->
+        <div class="zoom-container">
+            <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer;" onclick="toggleZoomMenu()"></i>
+            
+            <!-- Zoom Dropdown Menu -->
+            <div id="zoom-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
+                <a class="dropdown-item" href="#" onclick="setZoom(50)">Zoom in 50%</a>
+                <a class="dropdown-item" href="#" onclick="setZoom(-50)">Zoom out 50%</a>
+                <a class="dropdown-item" href="#" onclick="setZoom(50)">50%</a> <!-- Added the Zoom 50% option -->
+                <a class="dropdown-item" href="#" onclick="setZoom(100)">100%</a>
+            </div>
+        </div>
+
+        <!-- Ruler Icon and Dropdown Menu for Drawing/Erasing Lines -->
+        <div class="ruler-container">
+            <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer;" onclick="toggleRulerMenu()"></i>
+            
+            <!-- Ruler Dropdown Menu -->
+            <div id="ruler-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
+                <a class="dropdown-item" href="#" onclick="setMode('draw')">Draw Line</a>
+                <a class="dropdown-item" href="#" onclick="setMode('erase')">Erase Lines</a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Main Image Section -->
+    <div class="main-image" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; height: 400px;">
+        <img id="main-image" src="" alt="Main Image" style="max-width: 400px; height: auto;">
+    </div>
+
+
+    <script>
+        // Function to change the main image when a thumbnail is clicked
+        function changeImage(imageSrc, thumbnailId) {
+            console.log("Changing main image to: " + imageSrc);
+
+            var mainImageElement = document.getElementById('main-image');
+            if (mainImageElement) {
+                // Add timestamp to bypass cache
+                mainImageElement.src = imageSrc + "?t=" + new Date().getTime();
+            }
+
+            // Highlight the clicked thumbnail
+            var allThumbnails = document.getElementsByClassName('thumbnail');
+            for (var i = 0; i < allThumbnails.length; i++) {
+                allThumbnails[i].style.border = "";  // Remove border from all thumbnails
+            }
+
+            // Add a border to the clicked thumbnail
+            document.getElementById(thumbnailId).style.border = "2px solid blue";
+        }
+
+        // Toggle the visibility of the zoom dropdown menu
+        // Toggle the visibility of the zoom dropdown menu
+        function toggleZoomMenu() {
+            var menu = document.getElementById("zoom-menu");
+            if (menu.style.display === "none" || menu.style.display === "") {
+                menu.style.display = "block";
+            } else {
+                menu.style.display = "none";
+            }
+        }
+
+        // Function to set the zoom level of the main image
+        function setZoom(percentage) {
+            var mainImageElement = document.getElementById('main-image');
+            if (mainImageElement) {
+                var currentWidth = mainImageElement.width;
+                var currentHeight = mainImageElement.height;
+
+                // Zooming in or zooming out
+                if (percentage === 100) {
+                    // Reset to original size (default width: 400px, height auto)
+                    mainImageElement.style.width = "400px";
+                    mainImageElement.style.height = "auto";
+                } else if (percentage > 0) {
+                    // Zoom in
+                    mainImageElement.style.width = currentWidth + (currentWidth * (percentage / 100)) + "px";  // Zoom in
+                    mainImageElement.style.height = currentHeight + (currentHeight * (percentage / 100)) + "px";  // Zoom in
+                } else {
+                    // Zoom out
+                    mainImageElement.style.width = currentWidth + (currentWidth * (percentage / 100)) + "px";  // Zoom out
+                    mainImageElement.style.height = currentHeight + (currentHeight * (percentage / 100)) + "px";  // Zoom out
+                }
+            }
+
+            // Close the zoom dropdown menu after selection
+            var menu = document.getElementById("zoom-menu");
+            menu.style.display = "none";  // Close the dropdown
+        }
+        function toggleRulerMenu() {
+            var menu = document.getElementById("ruler-menu");
+            if (menu.style.display === "none" || menu.style.display === "") {
+                menu.style.display = "block";
+            } else {
+                menu.style.display = "none";
+            }
+        }
+
+        // Set the mode (draw or erase)
+        function setMode(mode) {
+            console.log("Selected mode: " + mode);
+
+            if (mode === "draw") {
+                // Enable drawing mode
+                alert("Drawing mode enabled");
+                // Implement drawing logic here (using canvas or another tool)
+            } else if (mode === "erase") {
+                // Enable erase mode
+                alert("Erase mode enabled");
+                // Implement erase logic here (clear drawn lines)
+            }
+
+            // Close the ruler menu after selection
+            var menu = document.getElementById("ruler-menu");
+            menu.style.display = "none";  // Close the dropdown
+        }
+
+    </script>
+
+    <!-- Bootstrap JS (for dropdown functionality) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html> {% endcomment %}
+
+
+{% comment %} <!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images from ZIP</title>
+    
+    <!-- Bootstrap CDN for dropdown -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons for zoom icon -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- CornerstoneJS CDN -->
+    <script src="https://unpkg.com/cornerstone-core"></script>
+    <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
+    <!-- DICOM Parser -->
+    <script src="https://unpkg.com/dicom-parser"></script>
+    
+</head>
+<body>
+    <h1>Images from ZIP</h1>
+
+    <!-- DICOM Thumbnails Container -->
+    <div class="dicom-thumbnails" style="display: flex; flex-wrap: wrap;"></div>
+
+    <!-- Image Thumbnails Section -->
+    <h3>Images & DICOM Files</h3>
+    <div class="thumbnails">
+        {% for image in images %}
+            <img src="/media/{{ image }}" class="thumbnail" style="width: 100px; height: 100px; margin: 10px; cursor: pointer;" id="thumbnail-{{ forloop.counter }}" onclick="changeImage('/media/{{ image }}', 'thumbnail-{{ forloop.counter }}')">
+        {% endfor %}
+    </div>
+
+    <!-- Controls Container: Zoom and Ruler Icons -->
+    <div class="controls-container" style="display: flex; gap: 50px; margin-top: 20px;">
+        <!-- Zoom Icon and Dropdown Menu -->
+        <div class="zoom-container">
+            <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer;" onclick="toggleZoomMenu()"></i>
+            
+            <!-- Zoom Dropdown Menu -->
+            <div id="zoom-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
+                <a class="dropdown-item" href="#" onclick="setZoom(50)">Zoom in 50%</a>
+                <a class="dropdown-item" href="#" onclick="setZoom(-50)">Zoom out 50%</a>
+                <a class="dropdown-item" href="#" onclick="setZoom(50)">50%</a>
+                <a class="dropdown-item" href="#" onclick="setZoom(100)">100%</a>
+            </div>
+        </div>
+
+        <!-- Ruler Icon and Dropdown Menu for Drawing/Erasing Lines -->
+        <div class="ruler-container">
+            <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer;" onclick="toggleRulerMenu()"></i>
+            
+            <!-- Ruler Dropdown Menu -->
+            <div id="ruler-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
+                <a class="dropdown-item" href="#" onclick="setMode('draw')">Draw Line</a>
+                <a class="dropdown-item" href="#" onclick="setMode('erase')">Erase Lines</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Image Section -->
+    <div class="main-image" style="margin-top: 20px; display: flex; justify-content: center; align-items: center; height: 400px;">
+        <div id="image-container" style="position: relative; width: 400px; height: auto;">
+            <img id="main-image" src="" alt="Main Image" style="max-width: 400px; height: auto;">
+            <canvas id="canvas" style="position: absolute; top: 0; left: 0;"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for drawing and mode selection
+        var drawMode = 'none'; // 'draw' or 'erase'
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var mainImageElement = document.getElementById('main-image');
+        var imageContainer = document.getElementById('image-container');
+        var imageElement;
+        var startX, startY, endX, endY;
+
+        // Set up image loading with Cornerstone
+        cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+        cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+
+        // Change the image when a thumbnail is clicked
+        function changeImage(imageSrc, thumbnailId) {
+            var mainImageElement = document.getElementById('main-image');
+            mainImageElement.src = imageSrc + "?t=" + new Date().getTime();
+            loadImage(imageSrc); // Reload image with Cornerstone
+        }
+
+        // Load image into Cornerstone
+        function loadImage(imageSrc) {
+            cornerstone.loadImage(imageSrc).then(function(image) {
+                imageElement = image;
+                cornerstone.displayImage(imageContainer, image);
+                canvas.width = imageElement.width;
+                canvas.height = imageElement.height;
+            });
+        }
+
+        // Set the mode (draw or erase)
+        function setMode(mode) {
+            drawMode = mode;
+            if (mode === 'draw') {
+                alert("Drawing mode enabled");
+            } else if (mode === 'erase') {
+                alert("Erase mode enabled");
+                clearCanvas(); // Clear the canvas if erase mode is selected
+            }
+            var menu = document.getElementById("ruler-menu");
+            menu.style.display = "none"; // Close the dropdown
+        }
+
+        // Clear the canvas (erase all lines)
+        function clearCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Drawing logic on mouse events
+        canvas.addEventListener('mousedown', function(event) {
+            if (drawMode === 'draw') {
+                startX = event.offsetX;
+                startY = event.offsetY;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                canvas.addEventListener('mousemove', drawLine);
+            }
+        });
+
+        canvas.addEventListener('mouseup', function(event) {
+            if (drawMode === 'draw') {
+                endX = event.offsetX;
+                endY = event.offsetY;
+                drawLine(event);
+                calculateDistance(startX, startY, endX, endY);
+                canvas.removeEventListener('mousemove', drawLine);
+            }
+        });
+
+        // Draw the line
+        function drawLine(event) {
+            if (drawMode === 'draw') {
+                ctx.lineTo(event.offsetX, event.offsetY);
+                ctx.stroke();
+            }
+        }
+
+        // Function to calculate the distance between two points
+        function calculateDistance(x1, y1, x2, y2) {
+            var dx = x2 - x1;
+            var dy = y2 - y1;
+            var distance = Math.sqrt(dx * dx + dy * dy).toFixed(2); // Pythagorean theorem
+            displayDistance(distance, x2, y2);
+        }
+
+        // Display the distance on the canvas
+        function displayDistance(distance, x, y) {
+            ctx.fillStyle = "red";
+            ctx.font = "14px Arial";
+            ctx.fillText(distance + " px", x + 10, y);
+        }
+
+        // Zoom logic
+        function toggleZoomMenu() {
+            var menu = document.getElementById("zoom-menu");
+            menu.style.display = (menu.style.display === "none" || menu.style.display === "") ? "block" : "none";
+        }
+
+        // Set the zoom level of the main image
+        function setZoom(percentage) {
+            var currentWidth = mainImageElement.width;
+            var currentHeight = mainImageElement.height;
+
+            if (percentage === 100) {
+                mainImageElement.style.width = "400px";
+                mainImageElement.style.height = "auto";
+            } else if (percentage > 0) {
+                mainImageElement.style.width = currentWidth + (currentWidth * (percentage / 100)) + "px";
+                mainImageElement.style.height = currentHeight + (currentHeight * (percentage / 100)) + "px";
+            } else {
+                mainImageElement.style.width = currentWidth + (currentWidth * (percentage / 100)) + "px";
+                mainImageElement.style.height = currentHeight + (currentHeight * (percentage / 100)) + "px";
+            }
+        }
+
+        // Toggle Ruler Menu visibility
+        function toggleRulerMenu() {
+            var menu = document.getElementById("ruler-menu");
+            if (menu.style.display === "none" || menu.style.display === "") {
+                menu.style.display = "block";
+            } else {
+                menu.style.display = "none";
+            }
+        }
+
+    </script>
+
+    <!-- Bootstrap JS (for dropdown functionality) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html> {% endcomment %}
+
+
+
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Images from ZIP</title>
+    
+    <!-- Bootstrap CDN for dropdown -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons for zoom icon -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- CornerstoneJS CDN -->
+    <script src="https://unpkg.com/cornerstone-core"></script>
+    <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
+    <!-- DICOM Parser -->
+    <script src="https://unpkg.com/dicom-parser"></script>
+    
+</head>
+<body>
+    
+    <div class="controls-container" style="display: flex; gap: 850px; justify-content: flex-start;background-color: #B4B8B3;padding: 10px; border-radius: 15px;">
+        
+        
+        <!-- Other content (this stays on the left side) -->
+        
+        <div class="controls-right" style="display: flex; gap: 45px; align-items: center;">
+            <!-- Zoom Icon and Dropdown -->
+            <div class="zoom-container">
+                <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer;" onclick="toggleZoomMenu()"></i>
+                
+                <!-- Zoom Dropdown Menu -->
+                <div id="zoom-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
+                    <a class="dropdown-item" href="#" onclick="setZoom100();">100% </a>
+                    <a class="dropdown-item" href="#" onclick="setZoom200();">200% </a>
+                    <a class="dropdown-item" href="#" onclick="setZoom400();">400% </a>
+                    <a class="dropdown-item" href="#" onclick="setZoom800();">800% </a>
+                    <a class="dropdown-item" href="#" onclick="zoomIn()">Zoom in </a>
+                    <a class="dropdown-item" href="#" onclick="zoomOut()">Zoom out</a>
+                    
+                    {% comment %} <a class="dropdown-item" href="#" onclick="resetZoom1()">Reset Zoom</a>  <!-- Reset to original size --> {% endcomment %}
+                </div>
+            </div>
+
+            <!-- Ruler Icon and Dropdown Menu for Drawing/Erasing Lines -->
+            <div class="ruler-container">
+                <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer;" onclick="toggleRulerMenu()"></i>
+                
+                <!-- Ruler Dropdown Menu -->
+                <div id="ruler-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
+                    
+                    <a class="dropdown-item" href="#" onclick="setMode('arrow')">Arrow</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('draw')">Distance</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('ellipse')">Ellipse</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('rectangle')">Rectangle</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('erase')">Erase Lines</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('eraseAll')">Erase All Lines</a>
+                </div>
+            </div>
+
+            <div class="rotate-container">
+                <i class="bi bi-arrow-repeat" style="font-size: 30px; cursor: pointer;" onclick="toggleRotateMenu()"></i>
+                
+                <!-- Rotate Dropdown Menu -->
+                <div id="rotate-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
+                    <a class="dropdown-item" href="#" onclick="rotateImageAnticlockwise()">Rotate 90° CCW</a>
+                    <a class="dropdown-item" href="#" onclick="rotateImage()">Rotate 90° CW</a>
+                    <a class="dropdown-item" href="#" onclick="rotateImage180()">Rotate 180°</a>
+                    <a class="dropdown-item" href="#" onclick="flipHorizontal()">Flip Horizontal</a>
+                    <a class="dropdown-item" href="#" onclick="flipVertical()">Flip Vertical</a>
+                    {% comment %} <a class="dropdown-item" href="#" onclick="clearTransformations()">Clear Transformations</a> {% endcomment %}
+                </div>
+            </div>
+            <!-- Download Icon -->
+            <div class="download-container">
+                <i class="bi bi-download" style="font-size: 30px; cursor: pointer;" onclick="downloadImage()"></i>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- DICOM Thumbnails Container -->
+    <div class="dicom-thumbnails" style="display: flex;   background-color: white; ">
+
+        <!-- Image Thumbnails Section -->
+        
+        <div class="thumbnails" style="display: flex; flex-direction: column; gap: 10px;width: 150px;background-color: #040f0171; padding: 10px;">
+            {% for image in images %}
+                <img src="/media/{{ image }}" class="thumbnail" style="width: 100px; height: 100px; margin: 10px; cursor: pointer;" id="thumbnail-{{ forloop.counter }}" onclick="changeImage('/media/{{ image }}', 'thumbnail-{{ forloop.counter }}')">
+            {% endfor %}
+        </div>
+
+        <!-- Controls Container: Zoom and Ruler Icons -->
+        
+        <!-- Main Image Section -->
+        <div class="main-image" style=" display: flex; justify-content: center; align-items: center; height: 660px;background-color: black;flex-grow: 1;overflow: hidden;">
+            <div id="image-container" style="position: relative; width: auto; height: auto;">
+                <img id="main-image" src="" alt="Main Image" style="width:700px; height: auto;">
+                <canvas id="canvas" style="position: absolute; top: 0; left: 0;cursor: crosshair;"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables for drawing and mode selection
+        var drawMode = 'none'; // 'draw' or 'erase'
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var mainImageElement = document.getElementById('main-image');
+        var imageContainer = document.getElementById('image-container');
+        var imageElement;
+        var startX, startY, endX, endY;
+        var currentLine;
+        var lines = []; // Array to store drawn lines
+        var ellipses = []; // Array to store ellipses
+        var eraseMode = false; // Track whether erase mode is active
+        var rectangles = []; // Array to store drawn rectangles
+        var selectedRectangle = null; // Currently selected rectangle for resizing
+        var currentZoomLevel = 100; // Initial zoom level set to 100%
+        var currentRotation = 0; 
+        let isFlipped = false;
+        let isFlippedVertically = false;
+        let isEllipseAdded = false;
+
+        // Adjust canvas size to match the image size on load
+        mainImageElement.onload = function() {
+            canvas.width = mainImageElement.width; // Set canvas width to image width
+            canvas.height = mainImageElement.height; // Set canvas height to image height
+            // Draw the image on the canvas
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);
+            redrawCanvas(); 
+        };
+
+
+        // Set up image loading with Cornerstone
+        cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
+        cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
+
+        // Change the image when a thumbnail is clicked
+        function changeImage(imageSrc, thumbnailId) {
+            var mainImageElement = document.getElementById('main-image');
+            mainImageElement.src = imageSrc + "?t=" + new Date().getTime();
+            loadImage(imageSrc); // Reload image with Cornerstone
+        }
+
+        // Load image into Cornerstone
+        function loadImage(imageSrc) {
+            cornerstone.loadImage(imageSrc).then(function(image) {
+                imageElement = image;
+                cornerstone.displayImage(imageContainer, image);
+                canvas.width = imageElement.width;
+                canvas.height = imageElement.height;
+                redrawCanvas(); // Redraw the lines for the new image
+            });
+        }
+
+        // Set the mode (draw or erase)
+        function setMode(mode) {
+            drawMode = mode;
+            if (mode === 'draw') {
+                alert("Drawing mode enabled");
+                canvas.style.cursor = "crosshair"; // Show crosshair cursor for drawing
+                eraseMode = false; // Disable erasing lines
+            } else if (mode === 'erase') {
+                alert("Erase mode enabled");
+                eraseMode = true; // Enable erasing lines
+                canvas.style.cursor = "pointer"; // Show pointer for erase mode
+            } else if (mode === 'eraseAll') {
+                alert("Erase All Lines");
+                eraseAllLines(); // Erase all lines when selected
+            } else if (mode === 'arrow') {
+                alert("Arrow mode enabled");
+                canvas.style.cursor = "pointer"; // Show pointer for drawing arrows
+                // Reset the drawing state when switching to arrow mode
+                startX = null;
+                startY = null;
+            } else if (mode === 'ellipse') {
+                alert("Ellipse mode enabled");
+                console.log("Ellipse mode enabled");
+                canvas.style.cursor = "crosshair"; // Crosshair for ellipse drawing
+            } else if (mode === 'rectangle') {
+                alert("Rectangle mode enabled");
+                canvas.style.cursor = "crosshair"; // Crosshair for rectangle drawing
+                eraseMode = false; // Disable erasing lines
+
+            } else {
+                // Default cursor style when no mode is selected
+                canvas.style.cursor = "default";
+                eraseMode = false;
+            }
+            var menu = document.getElementById("ruler-menu");
+            menu.style.display = "none"; // Close the dropdown
+        }
+
+        // Clear the canvas (erase all lines)
+        function clearCanvas() {
+            console.log("Clearing canvas...");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            redrawCanvas(); // Ensure canvas is completely cleared
+        }
+        // Erase all lines
+        function eraseAllLines() {
+            console.log("Erasing all lines...");
+            lines = []; // Clear lines array
+            ellipses = []; // Clear ellipses array
+            rectangles = []; // Clear rectangles array (Ensure it's cleared)
+            console.log("Lines array after clearing:", lines);
+            console.log("Ellipses array after clearing:", ellipses);
+            console.log("Rectangles array after clearing:", rectangles);
+            
+            // Redraw the image and reset the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+            console.log("Canvas cleared.");
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height); // Redraw the image
+            redrawCanvas(); // Redraw all lines and ellipses after clearing
+        }
+
+        // Drawing logic on mouse events
+        canvas.addEventListener('mousedown', function(event) {
+            if (drawMode === 'draw' && !eraseMode) {
+                startX = event.offsetX;
+                startY = event.offsetY;
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                canvas.addEventListener('mousemove', drawLine);
+            } else if (eraseMode) {
+                eraseSpecificLine(event); // If erase mode is active, check for line to erase
+            } else if (drawMode === 'arrow') {
+                // Ensure startX and startY are reset before starting to draw a new arrow
+                if (startX === null && startY === null) {
+                    startX = event.offsetX;
+                    startY = event.offsetY;
+                }
+            } else if (drawMode === 'ellipse') {
+                // Ellipse Drawing Mode
+                startX = event.offsetX;
+                startY = event.offsetY;
+                ctx.beginPath(); // Start the ellipse drawing
+                console.log("Ellipse drawing started at: ", event.offsetX, event.offsetY);
+            } else if (drawMode === 'rectangle' && !eraseMode) {
+                // Rectangle Drawing Mode
+                startX = event.offsetX;
+                startY = event.offsetY;
+                selectedRectangle = { startX, startY, endX: startX, endY: startY, resizing: false };
+                ctx.beginPath(); // Start rectangle drawing
+            }
+        });
+        canvas.addEventListener('mousemove', function(event) {
+            if (drawMode === 'rectangle' && startX && startY && !selectedRectangle.resizing) {
+                // Redraw everything and only update the current rectangle being drawn
+                
+
+                // Draw rectangle dynamically as the mouse moves without clearing the canvas
+                ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height); // Redraw the image
+                redrawCanvas(); // Redraw all existing rectangles, lines, and other elements
+
+                // Calculate rectangle width and height based on mouse position
+                let rectWidth = event.offsetX - selectedRectangle.startX;
+                let rectHeight = event.offsetY - selectedRectangle.startY;
+
+                // Draw the rectangle dynamically
+                ctx.strokeStyle = 'red';
+                ctx.setLineDash([]); // Solid line
+                ctx.strokeRect(selectedRectangle.startX, selectedRectangle.startY, rectWidth, rectHeight); // Draw rectangle dynamically
+            }
+        });
+
+        canvas.addEventListener('mouseup', function(event) {
+            if (drawMode === 'draw' && !eraseMode) {
+                endX = event.offsetX;
+                endY = event.offsetY;
+                drawLine(event);
+                calculateDistance(startX, startY, endX, endY); // Calculate distance between the points
+                lines.push({ startX, startY, endX, endY }); // Store the line
+                canvas.removeEventListener('mousemove', drawLine);
+                
+            }
+            // Handle drawing arrow
+            else if (drawMode === 'arrow') {
+                endX = event.offsetX;
+                endY = event.offsetY;
+                drawDashedArrow(startX, startY, endX, endY);
+                lines.push({ startX, startY, endX, endY, type: 'arrow' }); // Store arrow
+                startX = null; // Reset startX after drawing arrow
+                startY = null; // Reset startY after drawing arrow
+            } else if (drawMode === 'ellipse') {
+
+                // Log the current value of isEllipseAdded before resetting
+                console.log("isEllipseAdded before reset:", isEllipseAdded);
+
+                // Reset the flag before checking for duplicates
+                isEllipseAdded = false;
+
+                console.log("isEllipseAdded after reset:", isEllipseAdded);
+
+                if (!isEllipseAdded) {
+                    endX = event.offsetX;
+                    endY = event.offsetY;
+                    console.log("Ellipse drawing ended at: ", event.offsetX, event.offsetY);
+
+                    // Check if the ellipse already exists in the array to prevent duplicates
+                    let isDuplicate = false;
+                    for (let i = 0; i < ellipses.length; i++) {
+                        let ellipse = ellipses[i];
+                        if (ellipse.startX === startX && ellipse.startY === startY && ellipse.endX === endX && ellipse.endY === endY) {
+                            isDuplicate = true;
+                            break;
+                        }
+                    }
+
+                    console.log("isDuplicate status:", isDuplicate);
+
+                    if (!isDuplicate) {
+                        drawEllipse(startX, startY, endX, endY); // Draw the ellipse
+                        ellipses.push({ startX, startY, endX, endY }); // Store the ellipse if it's not a duplicate
+                        console.log("Ellipses array after drawing: ", ellipses); // Debugging line
+                        isEllipseAdded = true;  // Prevent adding again
+                        console.log("Ellipse added successfully, isEllipseAdded:", isEllipseAdded); // After adding ellipse
+                    } else {
+                        console.log("Duplicate ellipse detected, not adding.");
+                    }
+                }
+
+            } else if (drawMode === 'rectangle' && selectedRectangle && !selectedRectangle.resizing) {
+                // Store the rectangle data after drawing
+                endX = event.offsetX;
+                endY = event.offsetY;
+                rectangles.push({ startX: selectedRectangle.startX, startY: selectedRectangle.startY, endX, endY }); // Store rectangle
+                selectedRectangle = null;
+                redrawCanvas(); // Redraw the entire canvas
+            }
+        });
+        {% comment %} function drawEllipse(x1, y1, x2, y2) {
+            var radiusX = Math.abs(x2 - x1) / 2;
+            var radiusY = Math.abs(y2 - y1) / 2;
+            var centerX = (x1 + x2) / 2;
+            var centerY = (y1 + y2) / 2;
+
+            // Store the ellipse data
+            ellipses.push({ centerX, centerY, radiusX, radiusY });
+
+            ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2); // Draw ellipse
+            ctx.stroke(); // Outline the ellipse
+
+            // Optionally, show ellipse data on the canvas
+            displayEllipseData(centerX, centerY, radiusX, radiusY);
+        } {% endcomment %}
+        function drawEllipse(x1, y1, x2, y2) {
+            var radiusX = Math.abs(x2 - x1) / 2;
+            var radiusY = Math.abs(y2 - y1) / 2;
+            var centerX = (x1 + x2) / 2;
+            var centerY = (y1 + y2) / 2;
+
+            // Store the ellipse data
+            ellipses.push({ startX: x1, startY: y1, endX: x2, endY: y2 });
+
+            // Draw the ellipse
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2); // Draw ellipse
+            ctx.stroke(); // Outline the ellipse
+
+            // Optionally, show ellipse data on the canvas
+            displayEllipseData(centerX, centerY, radiusX, radiusY);
+        }
+        function displayEllipseData(centerX, centerY, radiusX, radiusY) {
+            ctx.fillStyle = "#8B0000";
+            ctx.font = "14px Arial";
+            ctx.fillText(`Center: (${centerX.toFixed(2)}, ${centerY.toFixed(2)})`, centerX + 10, centerY + 10);
+            ctx.fillText(`Radius X: ${radiusX.toFixed(2)} px`, centerX + 10, centerY + 25);
+            ctx.fillText(`Radius Y: ${radiusY.toFixed(2)} px`, centerX + 10, centerY + 40);
+        }
+
+
+        // Draw the line
+        function drawLine(event) {
+            if (drawMode === 'draw') {
+                ctx.lineTo(event.offsetX, event.offsetY);
+                ctx.stroke();
+            }
+        }
+        // Draw an arrow
+        function drawDashedArrow(startX, startY, endX, endY) {
+            var angle = Math.atan2(endY - startY, endX - startX); // Angle for the line
+            var arrowSize = 10; // Size of the arrowhead
+            var dashLength = 5; // Length of the dashes
+            var gapLength = 5; // Gap between dashes
+
+            // Set the color of the line to yellow
+            // ctx.strokeStyle = "yellow";  
+            // ctx.fillStyle = "yellow";    
+
+
+            // Draw dashed line
+            ctx.beginPath();
+            ctx.setLineDash([dashLength, gapLength]); // Create a dashed line
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(endX, endY);
+            ctx.stroke();
+            ctx.setLineDash([]); // Reset to solid line for arrowhead
+
+            // Draw the arrowhead (single line)
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowSize * Math.cos(angle - Math.PI / 6), endY - arrowSize * Math.sin(angle - Math.PI / 6));
+            ctx.stroke();
+
+            ctx.beginPath();
+            ctx.moveTo(endX, endY);
+            ctx.lineTo(endX - arrowSize * Math.cos(angle + Math.PI / 6), endY - arrowSize * Math.sin(angle + Math.PI / 6));
+            ctx.stroke();
+        }
+        function drawRectangle(event) {
+            selectedRectangle.endX = event.offsetX;
+            selectedRectangle.endY = event.offsetY;
+
+            // Clear canvas and redraw everything
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);
+            redrawCanvas();
+
+            // Draw the rectangle
+            ctx.beginPath();
+            ctx.rect(selectedRectangle.startX, selectedRectangle.startY, selectedRectangle.endX - selectedRectangle.startX, selectedRectangle.endY - selectedRectangle.startY);
+            ctx.strokeStyle = 'red';
+            ctx.stroke();
+
+            // Show rectangle details
+            var width = Math.abs(selectedRectangle.endX - selectedRectangle.startX);
+            var height = Math.abs(selectedRectangle.endY - selectedRectangle.startY);
+            var area = (width * height) / (96 * 96); // Assuming 96 DPI, convert to cm²
+
+            ctx.fillStyle = "yellow";
+            ctx.font = "14px Arial";
+            ctx.fillText(`Width: ${width}px`, selectedRectangle.startX + 5, selectedRectangle.startY - 5);
+            ctx.fillText(`Height: ${height}px`, selectedRectangle.startX + 5, selectedRectangle.startY + 15);
+            ctx.fillText(`Area: ${area.toFixed(3)} cm²`, selectedRectangle.startX + 5, selectedRectangle.startY + 35);
+
+            // Draw the resize corners
+            drawResizeCorners(selectedRectangle);
+        }
+        function drawResizeCorners(rect) {
+            const size = 3;
+            ctx.fillStyle = 'blue';
+
+            // Draw corners
+            ctx.beginPath();
+            ctx.arc(rect.startX, rect.startY, size, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(rect.endX, rect.startY, size, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(rect.startX, rect.endY, size, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.beginPath();
+            ctx.arc(rect.endX, rect.endY, size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        function resizeRectangle(event) {
+            if (selectedRectangle.resizing) {
+                selectedRectangle.endX = event.offsetX;
+                selectedRectangle.endY = event.offsetY;
+
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);
+                redrawCanvas(); // Redraw after resizing
+            }
+        }
+        function isNearCorner(event, rect) {
+            const tolerance = 10; // Tolerance for detecting clicks near the corners
+            return (
+                Math.abs(event.offsetX - rect.startX) < tolerance && Math.abs(event.offsetY - rect.startY) < tolerance ||
+                Math.abs(event.offsetX - rect.endX) < tolerance && Math.abs(event.offsetY - rect.startY) < tolerance ||
+                Math.abs(event.offsetX - rect.startX) < tolerance && Math.abs(event.offsetY - rect.endY) < tolerance ||
+                Math.abs(event.offsetX - rect.endX) < tolerance && Math.abs(event.offsetY - rect.endY) < tolerance
+            );
+        }
+
+        // Erase rectangle logic
+        function eraseRectangle(event) {
+            for (let i = 0; i < rectangles.length; i++) {
+                let rect = rectangles[i];
+                if (event.offsetX >= rect.startX && event.offsetX <= rect.endX && event.offsetY >= rect.startY && event.offsetY <= rect.endY) {
+                    rectangles.splice(i, 1); // Remove the rectangle from array
+                    redrawCanvas(); // Redraw the canvas without the erased rectangle
+                    break;
+                }
+            }
+        }
+
+
+                // Function to calculate the distance between two points
+        // function calculateDistance(x1, y1, x2, y2) {
+        //     var dx = x2 - x1;
+        //     var dy = y2 - y1;
+        //     var distance = Math.sqrt(dx * dx + dy * dy).toFixed(2); // Pythagorean theorem
+        //     displayDistance(distance, x2, y2);
+        // }
+
+        // // Display the distance on the canvas
+        // function displayDistance(distance, x, y) {
+        //     ctx.fillStyle = "red";
+        //     ctx.font = "14px Arial";
+        //     ctx.fillText(distance + " px", x + 10, y);
+        // }
+        var dpi = 96;  // Standard screen DPI (for most monitors)
+
+        // Function to calculate the distance between two points
+        {% comment %} function calculateDistance(x1, y1, x2, y2) {
+            var dx = x2 - x1;
+            var dy = y2 - y1;
+            var distanceInPixels = Math.sqrt(dx * dx + dy * dy); // Distance in pixels
+            var distanceInMM = (distanceInPixels / dpi) * 25.4; // Convert pixels to millimeters
+            displayDistance(distanceInMM.toFixed(2), x2, y2); // Display distance in mm
+        } {% endcomment %}
+
+        // Display the distance on the canvas (in mm)
+        // Function to display the distance on the canvas (in mm)
+        {% comment %} function displayDistance(distance, x, y) {
+            ctx.fillStyle = "red";
+            ctx.font = "14px Arial";
+
+            // Calculate the width and height of the text to avoid it going off the canvas
+            var textWidth = ctx.measureText(distance + " mm").width;
+            var textHeight = 14; // Approximate height of the text (14px font)
+
+            // Shift the text outside the image area if needed
+            var offsetX = 10; // Optional offset to the right for better visibility
+            var offsetY = 10; // Optional offset to the bottom for better visibility
+
+            // If the distance is near the right edge of the image, place the text to the right
+            if (x + textWidth + offsetX > canvas.width) {
+                x = x - textWidth - offsetX; // Move the text left if it's going out of bounds
+            } else {
+                x = x + offsetX; // Otherwise, keep it inside or move it slightly to the right
+            }
+
+            // If the distance is near the bottom edge of the image, place the text below
+            if (y + textHeight + offsetY > canvas.height) {
+                y = y - textHeight - offsetY; // Move the text up if it's going out of bounds
+            } else {
+                y = y + offsetY; // Otherwise, keep it inside or move it slightly below
+            }
+
+            // Display the distance in mm
+            ctx.fillText(distance + " mm", x, y);
+        } {% endcomment %}
+        var distanceMarkers = []; // Array to store distance markers
+
+        // Add distance marker
+        function calculateDistance(x1, y1, x2, y2) {
+            var dx = x2 - x1;
+            var dy = y2 - y1;
+            var distanceInPixels = Math.sqrt(dx * dx + dy * dy); // Distance in pixels
+            var distanceInMM = (distanceInPixels / dpi) * 25.4; // Convert pixels to millimeters
+            displayDistance(distanceInMM.toFixed(2), x2, y2); // Display distance in mm
+
+            // Store the distance marker
+            distanceMarkers.push({ distance: distanceInMM, x: x2, y: y2 });
+        }
+
+        // Function to display the distance on the canvas (in mm)
+        function displayDistance(distance, x, y) {
+            ctx.fillStyle = "red";
+            ctx.font = "14px Arial";
+
+            // Display the distance in mm
+            ctx.fillText(distance + " mm", x, y);
+        }
+
+
+        // Erase a specific line if clicked
+        function eraseSpecificLine(event) {
+            var clickX = event.offsetX;
+            var clickY = event.offsetY;
+            var tolerance = 10; // Set a tolerance for selecting a line (in px)
+
+            // Loop through each line and check if the click is close to the line
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                var lineStartX = line.startX;
+                var lineStartY = line.startY;
+                var lineEndX = line.endX;
+                var lineEndY = line.endY;
+
+                // Check if click is within the tolerance area of the line
+                if (isPointNearLine(clickX, clickY, lineStartX, lineStartY, lineEndX, lineEndY, tolerance)) {
+                    // Erase the line from the lines array
+                    lines.splice(i, 1); // Remove the line from the lines array
+                    redrawCanvas(); // Redraw the remaining lines
+                    break; // Exit the loop after erasing the line
+                }
+            }
+            for (var i = 0; i < ellipses.length; i++) {
+                var ellipse = ellipses[i];
+                var ellipseStartX = ellipse.startX;
+                var ellipseStartY = ellipse.startY;
+                var ellipseEndX = ellipse.endX;
+                var ellipseEndY = ellipse.endY;
+
+                // Check if the click is inside the ellipse (simplified approach)
+                if (isPointNearEllipse(clickX, clickY, ellipseStartX, ellipseStartY, ellipseEndX, ellipseEndY, tolerance)) {
+                    ellipses.splice(i, 1); // Remove the ellipse from the array
+                    redrawCanvas(); // Redraw the remaining shapes
+                    break;
+                }
+            }
+        }
+        // Function to check if a point is near a line (based on tolerance)
+        function isPointNearLine(px, py, x1, y1, x2, y2, tolerance) {
+            var dist = Math.abs((y2 - y1) * px - (x2 - x1) * py + x2 * y1 - y2 * x1) /
+                    Math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1));
+            return dist <= tolerance;
+        }
+        // Function to check if a point is inside an ellipse (based on tolerance)
+        function isPointNearEllipse(px, py, x1, y1, x2, y2, tolerance) {
+            var centerX = (x1 + x2) / 2;
+            var centerY = (y1 + y2) / 2;
+            var radiusX = Math.abs(x2 - x1) / 2;
+            var radiusY = Math.abs(y2 - y1) / 2;
+
+            // Use the ellipse equation to check if the point is inside the ellipse
+            var dx = (px - centerX) / radiusX;
+            var dy = (py - centerY) / radiusY;
+            var distance = dx * dx + dy * dy;
+
+            return distance <= 1 + tolerance; // Check if the distance is within the tolerance
+        }
+
+
+        // Redraw all lines on the canvas after erasing
+        {% comment %} function redrawCanvas() {
+            // Redraw image and clear canvas first
+            
+            
+            // Redraw the base image
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);
+
+            
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                if (line.type === 'line') {
+                    ctx.beginPath();
+                    ctx.moveTo(line.startX, line.startY);
+                    ctx.lineTo(line.endX, line.endY);
+                    ctx.stroke();
+                } else if (line.type === 'arrow') {
+                    drawDashedArrow(line.startX, line.startY, line.endX, line.endY);
+                }
+            }
+            // Redraw all ellipses
+            for (var i = 0; i < ellipses.length; i++) {
+                console.log("anu")
+                var ellipse = ellipses[i];
+                console.log("anu1")
+                drawEllipse(ellipse.startX, ellipse.startY, ellipse.endX, ellipse.endY);
+            }
+            for (let i = 0; i < rectangles.length; i++) {
+                let rect = rectangles[i];
+                ctx.beginPath();
+                ctx.rect(rect.startX, rect.startY, rect.endX - rect.startX, rect.endY - rect.startY);
+                ctx.strokeStyle = 'red';
+                ctx.stroke();
+                var width = Math.abs(rect.endX - rect.startX);
+                var height = Math.abs(rect.endY - rect.startY);
+                var area = (width * height) / (96 * 96); // Assuming 96 DPI
+
+                ctx.fillStyle = "brown";
+                ctx.font = "14px Arial";
+                ctx.fillText(`Width: ${width}px`, rect.startX + 5, rect.startY - 5);
+                ctx.fillText(`Height: ${height}px`, rect.startX + 5, rect.startY + 15);
+                ctx.fillText(`Area: ${area.toFixed(3)} cm²`, rect.startX + 5, rect.startY + 35);
+
+                drawResizeCorners(rect);
+            }
+        } {% endcomment %}
+        {% comment %} function redrawCanvas() {
+            console.log("Clearing canvas to redraw all elements...");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas to avoid any old data remaining
+
+            console.log("Redrawing the base image...");
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw the base image
+
+            isEllipseAdded = false; 
+
+            // Debugging: Log the number of lines, ellipses, and rectangles before redrawing
+            console.log("Redrawing lines... Total lines:", lines.length);
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                console.log(`Redrawing line ${i}:`, line);  // Log the data of each line being drawn
+                if (line.type !== 'arrow') {  // If it's not an arrow, draw a regular line
+                    ctx.beginPath();
+                    ctx.moveTo(line.startX, line.startY);
+                    ctx.lineTo(line.endX, line.endY);
+                    ctx.strokeStyle = 'black'; // Set the line color to black for visibility
+                    ctx.lineWidth = 2;  // Set line width for better visibility
+                    ctx.stroke();
+                }
+            }
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                if (line.type === 'arrow') {
+                    console.log(`Redrawing arrow ${i}:`, line);  // Log the data of each arrow being drawn
+                    drawDashedArrow(line.startX, line.startY, line.endX, line.endY);  // Draw the dashed arrow
+                }
+            }
+            // Redraw all ellipses (if any)
+            console.log("Redrawing ellipses... Total ellipses:", ellipses.length);
+            for (var i = 0; i < ellipses.length; i++) {
+                var ellipse = ellipses[i];
+                console.log(`Redrawing ellipse ${i}:`, ellipse);  // Log the data of each ellipse being drawn
+                drawEllipse(ellipse.startX, ellipse.startY, ellipse.endX, ellipse.endY);
+            }
+
+            // Redraw all rectangles (if any)
+            console.log("Redrawing rectangles... Total rectangles:", rectangles.length);
+            for (let i = 0; i < rectangles.length; i++) {
+                let rect = rectangles[i];
+                console.log(`Redrawing rectangle ${i}:`, rect);  // Log the data of each rectangle being drawn
+                ctx.beginPath();
+                ctx.rect(rect.startX, rect.startY, rect.endX - rect.startX, rect.endY - rect.startY);
+                ctx.strokeStyle = 'red'; // Set the rectangle color to red
+                ctx.lineWidth = 2;  // Set line width for better visibility
+                ctx.stroke();
+                var width = Math.abs(rect.endX - rect.startX);
+                var height = Math.abs(rect.endY - rect.startY);
+                var area = (width * height) / (96 * 96); // Assuming 96 DPI
+
+                ctx.fillStyle = "brown";
+                ctx.font = "14px Arial";
+                ctx.fillText(`Width: ${width}px`, rect.startX + 5, rect.startY - 5);
+                ctx.fillText(`Height: ${height}px`, rect.startX + 5, rect.startY + 15);
+                ctx.fillText(`Area: ${area.toFixed(3)} cm²`, rect.startX + 5, rect.startY + 35);
+            }
+
+            // Redraw all distance markers (if any)
+            console.log("Redrawing distance markers... Total markers:", distanceMarkers.length);
+            for (var i = 0; i < distanceMarkers.length; i++) {
+                var marker = distanceMarkers[i];
+                console.log(`Redrawing distance marker ${i}:`, marker);  // Log the data of each distance marker
+                displayDistance(marker.distance, marker.x, marker.y);
+            }
+
+            console.log("Canvas redrawn successfully.");
+            // Reset isEllipseAdded to allow drawing a new ellipse
+            isEllipseAdded = false;
+        } {% endcomment %}
+        function redrawCanvas() {
+            console.log("Clearing canvas to redraw all elements...");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas to avoid any old data remaining
+
+            console.log("Redrawing the base image...");
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw the base image
+
+            // Reset the isEllipseAdded flag here to allow drawing new ellipses
+            isEllipseAdded = false;  // Reset the flag after clearing the canvas
+
+            // Debugging: Log the number of lines, ellipses, and rectangles before redrawing
+            console.log("Redrawing lines... Total lines:", lines.length);
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                console.log(`Redrawing line ${i}:`, line);
+                if (line.type !== 'arrow') {  // If it's not an arrow, draw a regular line
+                    ctx.beginPath();
+                    ctx.moveTo(line.startX, line.startY);
+                    ctx.lineTo(line.endX, line.endY);
+                    ctx.strokeStyle = 'black';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+
+            for (var i = 0; i < lines.length; i++) {
+                var line = lines[i];
+                if (line.type === 'arrow') {
+                    console.log(`Redrawing arrow ${i}:`, line);
+                    drawDashedArrow(line.startX, line.startY, line.endX, line.endY);
+                }
+            }
+
+            console.log("Redrawing ellipses... Total ellipses:", ellipses.length);
+            for (var i = 0; i < ellipses.length; i++) {
+                var ellipse = ellipses[i];
+                console.log(`Redrawing ellipse ${i}:`, ellipse);
+                drawEllipse(ellipse.startX, ellipse.startY, ellipse.endX, ellipse.endY);
+            }
+
+            console.log("Redrawing rectangles... Total rectangles:", rectangles.length);
+            for (let i = 0; i < rectangles.length; i++) {
+                let rect = rectangles[i];
+                console.log(`Redrawing rectangle ${i}:`, rect);
+                ctx.beginPath();
+                ctx.rect(rect.startX, rect.startY, rect.endX - rect.startX, rect.endY - rect.startY);
+                ctx.strokeStyle = 'red';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+
+            console.log("Canvas redrawn successfully.");
+        }
+
+
+
+
+        // Zoom logic
+        function toggleZoomMenu() {
+            var zoomMenu = document.getElementById("zoom-menu"); // Correct variable name
+            var rulerMenu = document.getElementById("ruler-menu");
+
+            // If the zoom menu is open, close it, otherwise open it
+            if (zoomMenu.style.display === "block") {
+                zoomMenu.style.display = "none";
+            } else {
+                // Close the ruler menu if it's open
+                rulerMenu.style.display = "none";
+                // Open the zoom menu
+                zoomMenu.style.display = "block";
+            }
+        }
+
+
+        
+
+        // Initialize the original width and height (these are the original dimensions of the image).
+        
+
+        function setZoom100() {
+            var mainImageElement = document.getElementById("main-image");
+            
+            // Get the original image's natural width and height
+            var originalWidth = mainImageElement.naturalWidth;
+            var originalHeight = mainImageElement.naturalHeight;
+
+            // Apply the original width and height
+            mainImageElement.style.width = originalWidth + "px";
+            mainImageElement.style.height = originalHeight + "px";
+
+            // Update canvas size to match the resized image
+            var canvas = document.getElementById('canvas');
+            canvas.width = originalWidth;
+            canvas.height = originalHeight;
+
+            // Redraw the image and any drawn elements on the canvas
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before redrawing
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
+            redrawCanvas();  // Redraw any existing lines, ellipses, etc.
+
+            console.log("Zoom set to 100%. Image width: " + originalWidth + "px, Image height: " + originalHeight + "px");
+        }
+        function setZoom200() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Get the original image's natural width and height
+            var originalWidth = mainImageElement.naturalWidth;
+            var originalHeight = mainImageElement.naturalHeight;
+
+            // Calculate new width and height (200% of the original size)
+            var newWidth = originalWidth * 2;
+            var newHeight = originalHeight * 2;
+
+            // Apply the new width and height
+            mainImageElement.style.width = newWidth + "px";
+            mainImageElement.style.height = newHeight + "px";
+
+            // Update canvas size to match the resized image
+            var canvas = document.getElementById('canvas');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Redraw the image and any drawn elements on the canvas
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before redrawing
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
+            redrawCanvas();  // Redraw any existing lines, ellipses, etc.
+
+            console.log("Zoom set to 200%. Image width: " + newWidth + "px, Image height: " + newHeight + "px");
+        }
+        function setZoom400() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Get the original image's natural width and height
+            var originalWidth = mainImageElement.naturalWidth;
+            var originalHeight = mainImageElement.naturalHeight;
+
+            // Calculate new width and height (400% of the original size)
+            var newWidth = originalWidth * 4;
+            var newHeight = originalHeight * 4;
+
+            // Apply the new width and height
+            mainImageElement.style.width = newWidth + "px";
+            mainImageElement.style.height = newHeight + "px";
+
+            // Update canvas size to match the resized image
+            var canvas = document.getElementById('canvas');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Redraw the image and any drawn elements on the canvas
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before redrawing
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
+            redrawCanvas();  // Redraw any existing lines, ellipses, etc.
+
+            console.log("Zoom set to 400%. Image width: " + newWidth + "px, Image height: " + newHeight + "px");
+        }
+        function setZoom800() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Get the original image's natural width and height
+            var originalWidth = mainImageElement.naturalWidth;
+            var originalHeight = mainImageElement.naturalHeight;
+
+            // Calculate new width and height (800% of the original size)
+            var newWidth = originalWidth * 8;
+            var newHeight = originalHeight * 8;
+
+            // Apply the new width and height
+            mainImageElement.style.width = newWidth + "px";
+            mainImageElement.style.height = newHeight + "px";
+
+            // Update canvas size to match the resized image
+            var canvas = document.getElementById('canvas');
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Redraw the image and any drawn elements on the canvas
+            var ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before redrawing
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
+            redrawCanvas();  // Redraw any existing lines, ellipses, etc.
+
+            console.log("Zoom set to 800%. Image width: " + newWidth + "px, Image height: " + newHeight + "px");
+        }
+
+
+
+
+
+
+
+        // Optional: Add zoom-in and zoom-out buttons for demonstration
+        function zoomIn() {
+            var mainImageElement = document.getElementById("main-image");
+            
+            // Get the current dimensions of the image
+            var currentWidth = mainImageElement.width;
+            var currentHeight = mainImageElement.height;
+
+            // Define the pixel increment (20px)
+            var zoomIncrement = 20;
+
+            // Calculate new width and height
+            var newWidth = currentWidth + zoomIncrement;
+            var newHeight = currentHeight + zoomIncrement;
+
+            // Set the new width and height
+            mainImageElement.style.width = newWidth + "px";
+            mainImageElement.style.height = newHeight + "px";
+
+            // Update canvas size to match the resized image
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Redraw the image and any drawn elements on the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before redrawing
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
+            redrawCanvas();  // Redraw all lines, ellipses, etc.
+            
+            console.log("Zooming in... New width: " + newWidth + "px, New height: " + newHeight + "px");
+        }
+
+
+        function zoomOut() {
+            var mainImageElement = document.getElementById("main-image");
+            
+            // Get the current dimensions of the image
+            var currentWidth = mainImageElement.width;
+            var currentHeight = mainImageElement.height;
+
+            // Define the pixel decrement (20px)
+            var zoomDecrement = 20;
+
+            // Calculate new width and height
+            var newWidth = currentWidth - zoomDecrement;
+            var newHeight = currentHeight - zoomDecrement;
+
+            // Ensure the image doesn't shrink below a certain size (e.g., 100px)
+            if (newWidth < 100) newWidth = 100;
+            if (newHeight < 100) newHeight = 100;
+
+            // Set the new width and height
+            mainImageElement.style.width = newWidth + "px";
+            mainImageElement.style.height = newHeight + "px";
+
+            // Update canvas size to match the resized image
+            canvas.width = newWidth;
+            canvas.height = newHeight;
+
+            // Redraw the image and any drawn elements on the canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before redrawing
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
+            redrawCanvas();  // Redraw all lines, ellipses, etc.
+
+            console.log("Zooming out... New width: " + newWidth + "px, New height: " + newHeight + "px");
+        }
+
+
+        // Function to zoom to 50% of the current size (decrease size to 50% of the current size)
+        {% comment %} function zoomTo50() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Get current width and height of the image
+            
+
+            // Calculate the target size at 50% of the original size
+            var targetWidth = originalWidth * 0.5;
+            var targetHeight = originalHeight * 0.5;
+
+            // Apply the target width and height to the image
+            mainImageElement.style.width = targetWidth + "px";
+            mainImageElement.style.height = targetHeight + "px";
+
+            // Update the current zoom level to reflect 50%
+            currentZoomLevel = 50;  // This should be fixed at 50%
+        }
+
+        // Function to reset to original size (100%)
+        function resetZoom() {
+            var mainImageElement = document.getElementById("main-image");
+            mainImageElement.style.width = originalWidth + "px";  // Set to original width
+            mainImageElement.style.height = originalHeight + "px"; // Set to original height
+            canvas.width = originalWidth;  // Reset canvas width
+            canvas.height = originalHeight;  // Reset canvas height
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
+            redrawCanvas();  // Redraw all lines, ellipses, etc.
+        }
+        function resetZoom1() {
+            var mainImageElement = document.getElementById("main-image");
+            mainImageElement.style.width = "400px";  // Reset to original width
+            mainImageElement.style.height = "auto"; // Reset to original height
+            canvas.width = 400;  // Reset canvas width
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
+            redrawCanvas();  // Redraw all lines, ellipses, etc.
+        } {% endcomment %}
+
+
+        // Toggle Ruler Menu visibility
+        function toggleRulerMenu() {
+            var zoomMenu = document.getElementById("zoom-menu");
+            var rulerMenu = document.getElementById("ruler-menu");
+
+            // Check if the ruler menu is already open, if so close it
+            if (rulerMenu.style.display === "block") {
+                rulerMenu.style.display = "none";
+            } else {
+                // Close the zoom menu if it's open
+                zoomMenu.style.display = "none";
+                // Open the ruler menu
+                rulerMenu.style.display = "block";
+            }
+        }
+        {% comment %} function downloadImage() {
+            console.log("Download button clicked");
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+            // Clear the canvas and redraw the image and drawings once
+            
+            
+            // Redraw the image on the canvas
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height); // Redraw the image
+            console.log("Image redrawn");
+            redrawCanvas();
+            console.log("Image with lines, ellipses, and rectangles redrawn");
+            
+            // Export the current content of the canvas (which includes both the image and the drawings)
+            var imageURL = canvas.toDataURL("image/png");
+            console.log("Image URL generated");
+
+            // Create a temporary link element to trigger the download
+            var link = document.createElement('a');
+            link.href = imageURL;  // Set the href to the image data
+            link.download = 'image_with_drawings.png';  // Set the default filename
+            console.log("Download link created");
+            link.click();  // Trigger the click event to download the image
+            console.log("Download triggered");
+        } {% endcomment %}
+        function downloadImage() {
+            console.log("Download button clicked");
+            
+
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+
+            // First, clear the canvas to avoid any old data remaining
+            console.log("Clearing canvas...");
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            console.log("Canvas cleared");
+
+            // Redraw the base image on the canvas
+            console.log("Redrawing base image...");
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);
+            console.log("Base image redrawn");
+
+            // Debugging the arrays to check their data
+            console.log("Lines array before redrawing:", lines);
+            console.log("Ellipses array before redrawing:", ellipses);
+            console.log("Rectangles array before redrawing:", rectangles);
+
+            // Redraw all elements (lines, ellipses, rectangles) on the canvas
+            redrawCanvas();
+
+            console.log("Image with lines, ellipses, and rectangles redrawn");
+
+            // Export the current content of the canvas (which includes both the image and the drawings)
+            var imageURL = canvas.toDataURL("image/png");
+            console.log("Image URL generated");
+
+            // Create a temporary link element to trigger the download
+            var link = document.createElement('a');
+            link.href = imageURL;  // Set the href to the image data
+            link.download = 'image_with_drawings.png';  // Set the default filename
+            console.log("Download link created");
+
+            // Trigger the click event to download the image
+            link.click();
+            console.log("Download triggered");
+        }
+
+        function toggleRotateMenu() {
+            var rotateMenu = document.getElementById("rotate-menu");
+            rotateMenu.style.display = (rotateMenu.style.display === "none" || rotateMenu.style.display === "") ? "block" : "none";
+        }
+        function rotateImage() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Increment the rotation by 90 degrees
+            currentRotation += 90;
+            
+            // Keep the rotation value between 0-360 degrees
+            if (currentRotation >= 360) {
+                currentRotation = 0; // Reset to 0 degrees after a full rotation
+            }
+
+            // Apply the rotation to the image element
+            mainImageElement.style.transform = "rotate(" + currentRotation + "deg)";
+
+            // Ensure the canvas rotates as well, maintaining alignment
+            var canvas = document.getElementById('canvas');
+            canvas.style.transform = "rotate(" + currentRotation + "deg)"; // Same rotation for canvas
+        }
+        function rotateImageAnticlockwise() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Decrement the rotation by 90 degrees (anticlockwise)
+            currentRotation -= 90;
+
+            // Keep the rotation value between 0 and 360 degrees
+            if (currentRotation < 0) {
+                currentRotation = 270; // Set to 270 degrees if the value goes below 0
+            }
+
+            // Apply the rotation to the image element
+            mainImageElement.style.transform = "rotate(" + currentRotation + "deg)";
+
+            // Ensure the canvas rotates as well, maintaining alignment
+            var canvas = document.getElementById('canvas');
+            canvas.style.transform = "rotate(" + currentRotation + "deg)"; // Same rotation for canvas
+        }
+        function rotateImage180() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Set the rotation to 180 degrees
+            currentRotation = (currentRotation + 180) % 360;
+
+            // Apply the rotation to the image element
+            mainImageElement.style.transform = "rotate(" + currentRotation + "deg)";
+
+            // Ensure the canvas rotates as well, maintaining alignment
+            var canvas = document.getElementById('canvas');
+            canvas.style.transform = "rotate(" + currentRotation + "deg)"; // Same rotation for canvas
+        }
+        function flipHorizontal() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Toggle the flip state
+            if (isFlipped) {
+                mainImageElement.style.transform = "scaleX(1)"; // Restore to original
+                var canvas = document.getElementById('canvas');
+                canvas.style.transform = "scaleX(1)"; // Restore canvas to original
+            } else {
+                mainImageElement.style.transform = "scaleX(-1)"; // Flip horizontally
+                var canvas = document.getElementById('canvas');
+                canvas.style.transform = "scaleX(-1)"; // Apply same flip to canvas
+            }
+
+            // Update the flip state
+            isFlipped = !isFlipped;
+        }
+        function flipVertical() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Set the rotation to 180 degrees
+            currentRotation = (currentRotation + 180) % 360;
+
+            // Apply the rotation to the image element
+            mainImageElement.style.transform = "rotate(" + currentRotation + "deg)";
+
+            // Ensure the canvas rotates as well, maintaining alignment
+            var canvas = document.getElementById('canvas');
+            canvas.style.transform = "rotate(" + currentRotation + "deg)"; // Same rotation for canvas
+        }
+        {% comment %} function clearTransformations() {
+            var mainImageElement = document.getElementById("main-image");
+
+            // Reset to original position and reset rotation
+            currentRotation = 0; // Reset rotation to 0 degrees
+            isFlipped = false;   // Reset flip state
+
+            // Clear all transformations
+            mainImageElement.style.transition = "transform 0.3s";
+            mainImageElement.style.transform = "rotate(0deg) scaleX(1) scaleY(1)"; // Reset to original position, no flips or rotations
+
+            // Reset canvas to match
+            var canvas = document.getElementById('canvas');
+            canvas.style.transition = "transform 0.3s";
+            canvas.style.transform = "rotate(0deg) scaleX(1) scaleY(1)"; // Reset canvas to original position
+
+            console.log("All transformations cleared. Image and canvas are back to original position.");
+        } {% endcomment %}
+        
+
+
+    </script>
+
+    <!-- Bootstrap JS (for dropdown functionality) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
