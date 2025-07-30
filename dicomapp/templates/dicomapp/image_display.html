@@ -183,7 +183,7 @@
                 alert("Ellipse mode enabled");
                 console.log("Ellipse mode enabled");
                 canvas.style.cursor = "crosshair";
-                isEllipseAdded = false; // Crosshair for ellipse drawing
+                
             } else if (mode === 'rectangle') {
                 alert("Rectangle mode enabled");
                 canvas.style.cursor = "crosshair"; // Crosshair for rectangle drawing
@@ -244,7 +244,7 @@
                 }
             } else if (drawMode === 'ellipse') {
                 // Ellipse Drawing Mode
-                isEllipseAdded = false;
+               
                 startX = event.offsetX;
                 startY = event.offsetY;
                 ctx.beginPath(); // Start the ellipse drawing
@@ -275,6 +275,25 @@
                 ctx.setLineDash([]); // Solid line
                 ctx.strokeRect(selectedRectangle.startX, selectedRectangle.startY, rectWidth, rectHeight); // Draw rectangle dynamically
             }
+            // Logic to dynamically draw ellipse while mouse is moving
+            if (drawMode === 'ellipse' && startX && startY) {
+                endX = event.offsetX;
+                endY = event.offsetY;
+
+                // Clear canvas and redraw all elements before redrawing ellipses
+                ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+                ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height); // Redraw the base image
+                redrawCanvas(); // Redraw all existing elements (lines, rectangles, ellipses)
+
+                // Draw all existing ellipses with their data
+                for (let i = 0; i < ellipses.length; i++) {
+                    let ellipse = ellipses[i];
+                    drawEllipseWithData(ellipse.startX, ellipse.startY, ellipse.endX, ellipse.endY, ellipse.mean, ellipse.sd, ellipse.max, ellipse.min, ellipse.area);
+                }
+
+                // Draw the new ellipse dynamically
+                drawEllipseWithData(startX, startY, endX, endY); // Update the ellipse with new data
+            }
         });
 
         canvas.addEventListener('mouseup', function(event) {
@@ -297,48 +316,34 @@
                 startY = null; // Reset startY after drawing arrow
             } else if (drawMode === 'ellipse') {
 
-                // Log the current value of isEllipseAdded before resetting
-                console.log("isEllipseAdded before reset:", isEllipseAdded);
-                // Log the start and end points before drawing
-                console.log(`StartX: ${startX}, StartY: ${startY}, EndX: ${endX}, EndY: ${endY}`);
-
-                // Prevent duplicate ellipses from being added to the array
-                if (isEllipseAdded) {
-                    console.log("Ellipse already added, skipping.");
-                    return; // Exit if an ellipse is already added
-                }
-
                 endX = event.offsetX;
                 endY = event.offsetY;
-                console.log("Ellipse drawing ended at: ", endX, endY);
 
-                // Check if the ellipse already exists in the array to prevent duplicates
-                let isDuplicate = false;
-                for (let i = 0; i < ellipses.length; i++) {
-                    let ellipse = ellipses[i];
-                       // Use a tolerance to avoid duplicate checking based on slight differences in coordinates
-                    const tolerance = 5;
-                    if (Math.abs(ellipse.startX - startX) <= tolerance &&
-                        Math.abs(ellipse.startY - startY) <= tolerance &&
-                        Math.abs(ellipse.endX - endX) <= tolerance &&
-                        Math.abs(ellipse.endY - endY) <= tolerance) {
-                        isDuplicate = true;
-                        break;
-                    }
-                }
+                // Calculate ellipse data (example)
+                var radiusX = Math.abs(endX - startX) / 2;
+                var radiusY = Math.abs(endY - startY) / 2;
+                var centerX = (startX + endX) / 2;
+                var centerY = (startY + endY) / 2;
 
-                if (!isDuplicate) {
-                    // Draw the ellipse and add it to the array
-                    console.log("Adding ellipse to the array:", { startX, startY, endX, endY });
-                    drawEllipse(startX, startY, endX, endY);
-                    ellipses.push({ startX, startY, endX, endY });
-                    console.log("Ellipse added successfully:", ellipses);
-                    isEllipseAdded = true;  // Flag set to prevent further additions until next draw
-                } else {
-                    console.log("Duplicate ellipse detected, not adding.");
-                }
-               
-            
+                // Calculate statistical data
+                var mean = (radiusX + radiusY) / 2;
+                var sd = Math.abs(radiusX - radiusY); // Example for SD calculation
+                var max = Math.max(radiusX, radiusY) * 100; // Example max value
+                var min = Math.min(radiusX, radiusY) * 10;  // Example min value
+                var area = Math.PI * radiusX * radiusY;  // Ellipse area
+
+                // Draw the final ellipse and store it in the ellipses array
+                drawEllipseWithData(startX, startY, endX, endY, mean, sd, max, min, area);
+
+                // Store the new ellipse data in the ellipses array for future redrawing
+                ellipses.push({ startX, startY, endX, endY, mean, sd, max, min, area });
+
+                console.log("Stored ellipse:", { startX, startY, endX, endY, mean, sd, max, min, area });
+
+                // Reset drawing state
+                startX = null;
+                startY = null;
+                    
 
             } else if (drawMode === 'rectangle' && selectedRectangle && !selectedRectangle.resizing) {
                 // Store the rectangle data after drawing
@@ -620,7 +625,10 @@
             for (var i = 0; i < ellipses.length; i++) {
                 var ellipse = ellipses[i];
                 console.log(`Redrawing ellipse ${i}:`, ellipse);
-                drawEllipse(ellipse.startX, ellipse.startY, ellipse.endX, ellipse.endY);
+                
+                // Use drawEllipseWithData to ensure data is displayed with the ellipse
+                drawEllipseWithData(ellipse.startX, ellipse.startY, ellipse.endX, ellipse.endY, 
+                                    ellipse.mean, ellipse.sd, ellipse.max, ellipse.min, ellipse.area);
             }
 
             console.log("Redrawing rectangles... Total rectangles:", rectangles.length);
@@ -1020,9 +1028,39 @@
 
             console.log("All transformations cleared. Image and canvas are back to original position.");
         } {% endcomment %}
-        
+        function drawEllipseWithData(x1, y1, x2, y2, mean, sd, max, min, area) {
+            var centerX = (x1 + x2) / 2;
+            var centerY = (y1 + y2) / 2;
+
+            // Calculate the radii for ellipse based on the start and end coordinates
+            var radiusX = Math.abs(x2 - x1) / 2;
+            var radiusY = Math.abs(y2 - y1) / 2;
+
+            // Draw the ellipse
+            ctx.beginPath();
+            ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2); // Draw ellipse
+            ctx.stroke(); // Outline the ellipse
+
+            // Display the data (Mean, SD, Max, Min, Area) near the ellipse
+            displayEllipseData(centerX, centerY, radiusX, radiusY, mean, sd, max, min, area);
+        }
+
+    
+        function displayEllipseData(centerX, centerY, radiusX, radiusY, mean, sd, max, min, area) {
+            ctx.fillStyle = "yellow";
+            ctx.font = "14px Arial";
+                
+            // Displaying ellipse data on the canvas
+            ctx.fillText(`Mean: ${mean.toFixed(2)} SD: ${sd.toFixed(2)}`, centerX + 10, centerY + 10);
+            ctx.fillText(`Max: ${max.toFixed(2)} Min: ${min.toFixed(2)}`, centerX + 10, centerY + 25);
+            ctx.fillText(`Area: ${area.toFixed(3)} cm²`, centerX + 10, centerY + 40);
+            ctx.fillText(`Radius X: ${radiusX.toFixed(2)} px`, centerX + 10, centerY + 55);
+            ctx.fillText(`Radius Y: ${radiusY.toFixed(2)} px`, centerX + 10, centerY + 70);
+        }
 
 
+
+            
     </script>
 
     <!-- Bootstrap JS (for dropdown functionality) -->
