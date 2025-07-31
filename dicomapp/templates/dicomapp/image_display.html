@@ -4,6 +4,7 @@
 
 <!DOCTYPE html> 
 <html lang="en">
+{% load static %}
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -24,15 +25,16 @@
 </head>
 <body>
     
-    <div class="controls-container" style="display: flex; gap: 850px; justify-content: flex-start;background-color: #B4B8B3;padding: 10px; border-radius: 15px;">
+    <div class="controls-container" style="display: flex; gap: 20px; justify-content: flex-end;background-color: #6BE4F2 ;padding: 10px; ">
+       
         
         
         <!-- Other content (this stays on the left side) -->
         
-        <div class="controls-right" style="display: flex; gap: 45px; align-items: center;">
+        <div class="controls-right" style="display: flex; gap: 30px; align-items: center;">
             <!-- Zoom Icon and Dropdown -->
-            <div class="zoom-container">
-                <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer;" onclick="toggleZoomMenu()"></i>
+            <div class="zoom-container"style="background-color: #B0BEC5; padding: 4px; border-radius: 5px;width:50px;height:50px;">
+                <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer;position: relative; right: -7px;" onclick="toggleZoomMenu()"></i>
                 
                 <!-- Zoom Dropdown Menu -->
                 <div id="zoom-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
@@ -48,8 +50,8 @@
             </div>
 
             <!-- Ruler Icon and Dropdown Menu for Drawing/Erasing Lines -->
-            <div class="ruler-container">
-                <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer;" onclick="toggleRulerMenu()"></i>
+            <div class="ruler-container"style="background-color: #B0BEC5; padding: 4px; border-radius: 5px;width:50px;height:50px;">
+                <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer;position: relative; right: -7px;" onclick="toggleRulerMenu()"></i>
                 
                 <!-- Ruler Dropdown Menu -->
                 <div id="ruler-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
@@ -58,16 +60,17 @@
                     <a class="dropdown-item" href="#" onclick="setMode('draw')">Distance</a>
                     <a class="dropdown-item" href="#" onclick="setMode('ellipse')">Ellipse</a>
                     <a class="dropdown-item" href="#" onclick="setMode('rectangle')">Rectangle</a>
-                    <a class="dropdown-item" href="#" onclick="setMode('erase')">Erase Lines</a>
+                    {% comment %} <a class="dropdown-item" href="#" onclick="setMode('polygon')">Closed Polygon</a> {% endcomment %}
+                    {% comment %} <a class="dropdown-item" href="#" onclick="setMode('erase')">Erase Lines</a> {% endcomment %}
                     <a class="dropdown-item" href="#" onclick="setMode('eraseAll')">Erase All Lines</a>
                 </div>
             </div>
 
-            <div class="rotate-container">
-                <i class="bi bi-arrow-repeat" style="font-size: 30px; cursor: pointer;" onclick="toggleRotateMenu()"></i>
+            <div class="rotate-container"style="background-color: #B0BEC5; padding: 4px; border-radius: 5px;width:50px;height:50px;">
+                <i class="bi bi-arrow-repeat" style="font-size: 30px; cursor: pointer;position: relative; right: -7px;" onclick="toggleRotateMenu()"></i>
                 
                 <!-- Rotate Dropdown Menu -->
-                <div id="rotate-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
+                <div id="rotate-menu" class="dropdown-menu" style="display: none; position: relative;; z-index: 1000; margin-top: 10px;float: right">
                     <a class="dropdown-item" href="#" onclick="rotateImageAnticlockwise()">Rotate 90° CCW</a>
                     <a class="dropdown-item" href="#" onclick="rotateImage()">Rotate 90° CW</a>
                     <a class="dropdown-item" href="#" onclick="rotateImage180()">Rotate 180°</a>
@@ -77,30 +80,34 @@
                 </div>
             </div>
             <!-- Download Icon -->
-            <div class="download-container">
-                <i class="bi bi-download" style="font-size: 30px; cursor: pointer;" onclick="downloadImage()"></i>
+            <div class="download-container"style="background-color: #B0BEC5; padding: 4px; border-radius: 5px;width:50px;height:50px;">
+                <i class="bi bi-download" style="font-size: 30px; cursor: pointer;position: relative; right: -7px;" onclick="downloadImage()"></i>
             </div>
         </div>
     </div>
 
 
     <!-- DICOM Thumbnails Container -->
-    <div class="dicom-thumbnails" style="display: flex;   background-color: white; ">
+    <div class="dicom-thumbnails" style="display: flex;   background-color: white;">
 
         <!-- Image Thumbnails Section -->
         
-        <div class="thumbnails" style="display: flex; flex-direction: column; gap: 10px;width: 150px;background-color: #040f0171; padding: 10px;">
+        <div class="thumbnails" style="display: flex; flex-direction: column; gap: 10px;width: 150px;background-color: #6BE4F2 ;overflow-y: auto; height: 90vh; ">
             {% for image in images %}
-                <img src="/media/{{ image }}" class="thumbnail" style="width: 100px; height: 100px; margin: 10px; cursor: pointer;" id="thumbnail-{{ forloop.counter }}" onclick="changeImage('/media/{{ image }}', 'thumbnail-{{ forloop.counter }}')">
+                <div class="thumbnail-container" id="thumbnail-container-{{ forloop.counter }}" style="position: relative; display: block; width: 100%; height: 100px;  padding: 5px 14px 5px 14px; margin: 0;background-color: transparent;">
+
+                    <img src="/media/{{ image }}" class="thumbnail" style="width: 100%; height: 100%;object-fit: cover; margin: 0;  cursor: pointer;" id="thumbnail-{{ forloop.counter }}" onclick="changeImage('/media/{{ image }}', 'thumbnail-{{ forloop.counter }}')">
+                </div>
             {% endfor %}
         </div>
 
         <!-- Controls Container: Zoom and Ruler Icons -->
         
         <!-- Main Image Section -->
-        <div class="main-image" style=" display: flex; justify-content: center; align-items: center; height: 660px;background-color: black;flex-grow: 1;overflow: hidden;">
+        <div class="main-image" style=" display: flex; justify-content: center; align-items: center;height: calc(100vh - 70px);background-image: url('{% static 'images/BGIMAGE1.jpg' %}'); background-size: cover; background-position: center center; flex-grow: 1; overflow: hidden;">
             <div id="image-container" style="position: relative; width: auto; height: auto;">
-                <img id="main-image" src="" alt="Main Image" style="width:700px; height: auto;">
+            
+                <img id="main-image" src=""  style="width:700px; height: auto;box-shadow: 0px 0px 2px; border-radius: 4px;">
                 <canvas id="canvas" style="position: absolute; top: 0; left: 0;cursor: crosshair;"></canvas>
             </div>
         </div>
@@ -126,6 +133,9 @@
         let isFlipped = false;
         let isFlippedVertically = false;
         let isEllipseAdded = false;
+        var polygonPoints = []; // Store points for polygon
+        var polygons = []; // Store completed polygons
+        var isDrawingPolygon = false; // Track whether polygon drawing is active
 
         // Adjust canvas size to match the image size on load
         mainImageElement.onload = function() {
@@ -141,12 +151,60 @@
         cornerstoneWADOImageLoader.external.cornerstone = cornerstone;
         cornerstoneWADOImageLoader.external.dicomParser = dicomParser;
 
-        // Change the image when a thumbnail is clicked
-        function changeImage(imageSrc, thumbnailId) {
+        {% comment %} let selectedThumbnail = null; {% endcomment %}
+
+        {% comment %} function changeImage(imageSrc, thumbnailId) {
+            console.log(`thumbnailId received: ${thumbnailId}`); // Log the thumbnailId
+
             var mainImageElement = document.getElementById('main-image');
+            console.log(`Changing image source to: ${imageSrc}`);
             mainImageElement.src = imageSrc + "?t=" + new Date().getTime();
             loadImage(imageSrc); // Reload image with Cornerstone
+
+            // Check if a thumbnail is already selected
+            if (selectedThumbnail) {
+                console.log(`Removing active styles from: ${selectedThumbnail.id}`);
+                // Remove active styles from the previously selected thumbnail
+                selectedThumbnail.style.border = "none";
+                selectedThumbnail.style.backgroundColor = ""; // Reset background color
+            }
+
+            // Set the new selected thumbnail
+            selectedThumbnail = document.getElementById(thumbnailId);
+            console.log(`Selected new thumbnail with ID: ${selectedThumbnail.id}`);
+
+            // Apply active styles to the newly selected thumbnail
+            selectedThumbnail.style.border = "5px solid blue"; // Set blue border
+            selectedThumbnail.style.backgroundColor = "#4CAF50"; // Set background color to green (for selected thumbnail)
+            console.log(`Applied styles to selected thumbnail: ${selectedThumbnail.id}`); // Confirm style application
+        } {% endcomment %}
+
+        function changeImage(imageSrc, thumbnailId) {
+            console.log(`thumbnailId received: ${thumbnailId}`); // Log the thumbnailId
+
+            var mainImageElement = document.getElementById('main-image');
+            console.log(`Changing image source to: ${imageSrc}`);
+            mainImageElement.src = imageSrc + "?t=" + new Date().getTime();
+
+            var clickedThumbnail = document.getElementById(thumbnailId);
+            console.log(`Selected new thumbnail with ID: ${clickedThumbnail.id}`);
+
+            // Get the parent container of the clicked thumbnail (the div with class "thumbnail-container")
+            var clickedThumbnailContainer = clickedThumbnail.parentElement; // This will be the div with class "thumbnail-container"
+
+            // Remove active background color from all thumbnail containers
+            var thumbnails = document.querySelectorAll('.thumbnail-container');
+            thumbnails.forEach(function(thumbnail) {
+                thumbnail.style.backgroundColor = ""; // Reset background color
+            });
+
+            // Apply active background color to the newly selected thumbnail container
+            clickedThumbnailContainer.style.backgroundColor = "#26C5DA"; // Set background color to green (for selected thumbnail)
+            console.log(`Applied background color to selected thumbnail: ${clickedThumbnail.id}`);
+
+            loadImage(imageSrc); // Reload image with Cornerstone
         }
+
 
         // Load image into Cornerstone
         function loadImage(imageSrc) {
@@ -188,11 +246,17 @@
                 alert("Rectangle mode enabled");
                 canvas.style.cursor = "crosshair"; // Crosshair for rectangle drawing
                 eraseMode = false; // Disable erasing lines
+            } else if (mode === 'polygon') {
+                alert("Polygon drawing mode enabled");
+                isDrawingPolygon = true;
+                polygonPoints = []; // Reset points for new polygon
+                canvas.style.cursor = "crosshair"; // Show crosshair for polygon drawing
 
             } else {
                 // Default cursor style when no mode is selected
                 canvas.style.cursor = "default";
                 eraseMode = false;
+                isDrawingPolygon = false;
             }
             var menu = document.getElementById("ruler-menu");
             menu.style.display = "none"; // Close the dropdown
@@ -255,6 +319,12 @@
                 startY = event.offsetY;
                 selectedRectangle = { startX, startY, endX: startX, endY: startY, resizing: false };
                 ctx.beginPath(); // Start rectangle drawing
+            } else if (isDrawingPolygon) {
+                var x = event.offsetX;
+                var y = event.offsetY;
+                polygonPoints.push({ x: x, y: y }); // Store the point for the polygon
+                drawPolygonPreview(); // Draw the polygon as the user clicks
+                drawPoint(x, y); // Draw the point as a circle
             }
         });
         canvas.addEventListener('mousemove', function(event) {
@@ -293,6 +363,17 @@
 
                 // Draw the new ellipse dynamically
                 drawEllipseWithData(startX, startY, endX, endY); // Update the ellipse with new data
+            }
+        });
+
+        // Handle double-click to close the polygon
+        canvas.addEventListener('dblclick', function(event) {
+            if (isDrawingPolygon && polygonPoints.length > 2) {
+                polygons.push([...polygonPoints]); // Save the completed polygon
+                drawPolygon(polygonPoints); // Draw the final polygon
+                calculatePolygonArea(polygonPoints); // Calculate and display area
+                polygonPoints = []; // Reset for next polygon
+                isDrawingPolygon = false; // Disable polygon drawing
             }
         });
 
@@ -650,6 +731,13 @@
                 ctx.fillText(`Height: ${height}px`, rect.startX + 5, rect.startY + 15);
                 ctx.fillText(`Area: ${area.toFixed(3)} cm²`, rect.startX + 5, rect.startY + 35);
             }
+            console.log("Redrawing polygons... Total polygons:", polygons.length);
+            for (var i = 0; i < polygons.length; i++) {
+                var polygon = polygons[i];
+                console.log(`Redrawing polygon ${i}:`, polygon);
+                drawPolygon(polygon);  // Draw the polygon
+                calculatePolygonArea(polygon); // Display the area for each polygon
+            }
 
             console.log("Canvas redrawn successfully.");
         }
@@ -661,16 +749,15 @@
         function toggleZoomMenu() {
             var zoomMenu = document.getElementById("zoom-menu"); // Correct variable name
             var rulerMenu = document.getElementById("ruler-menu");
+            var rotateMenu = document.getElementById("rotate-menu");
 
             // If the zoom menu is open, close it, otherwise open it
-            if (zoomMenu.style.display === "block") {
-                zoomMenu.style.display = "none";
-            } else {
-                // Close the ruler menu if it's open
-                rulerMenu.style.display = "none";
-                // Open the zoom menu
-                zoomMenu.style.display = "block";
-            }
+            // Hide other menus if they are open
+            rulerMenu.style.display = "none";
+            rotateMenu.style.display = "none";
+
+            // Toggle the zoom menu
+            zoomMenu.style.display = (zoomMenu.style.display === "block") ? "none" : "block";
         }
 
 
@@ -868,15 +955,14 @@
             var zoomMenu = document.getElementById("zoom-menu");
             var rulerMenu = document.getElementById("ruler-menu");
 
-            // Check if the ruler menu is already open, if so close it
-            if (rulerMenu.style.display === "block") {
-                rulerMenu.style.display = "none";
-            } else {
-                // Close the zoom menu if it's open
-                zoomMenu.style.display = "none";
-                // Open the ruler menu
-                rulerMenu.style.display = "block";
-            }
+            var rotateMenu = document.getElementById("rotate-menu");
+
+            // Hide other menus if they are open
+            zoomMenu.style.display = "none";
+            rotateMenu.style.display = "none";
+
+            // Toggle the ruler menu
+            rulerMenu.style.display = (rulerMenu.style.display === "block") ? "none" : "block";
         }
         
         function downloadImage() {
@@ -929,6 +1015,14 @@
 
         function toggleRotateMenu() {
             var rotateMenu = document.getElementById("rotate-menu");
+            var zoomMenu = document.getElementById("zoom-menu");
+            var rulerMenu = document.getElementById("ruler-menu");
+
+            // Hide other menus if they are open
+            zoomMenu.style.display = "none";
+            rulerMenu.style.display = "none";
+
+            // Toggle the rotate menu
             rotateMenu.style.display = (rotateMenu.style.display === "none" || rotateMenu.style.display === "") ? "block" : "none";
         }
         function rotateImage() {
@@ -1039,24 +1133,121 @@
             // Draw the ellipse
             ctx.beginPath();
             ctx.ellipse(centerX, centerY, radiusX, radiusY, 0, 0, Math.PI * 2); // Draw ellipse
+            ctx.strokeStyle = "green";  // Set the ellipse border color to green
+            ctx.lineWidth = 2; // Optional: set line width to make it thicker if needed
             ctx.stroke(); // Outline the ellipse
 
             // Display the data (Mean, SD, Max, Min, Area) near the ellipse
             displayEllipseData(centerX, centerY, radiusX, radiusY, mean, sd, max, min, area);
         }
 
-    
+        let hoveredText = null;  // Store the hovered text element
         function displayEllipseData(centerX, centerY, radiusX, radiusY, mean, sd, max, min, area) {
+            ctx.fillStyle = "yellow";  // Text color
+            ctx.font = "14px Arial";
+            
+            // Calculate text width and height to fit the background rectangle around the text
+            var text1 = `Mean: ${mean.toFixed(2)} SD: ${sd.toFixed(2)}`;
+            var text2 = `Max: ${max.toFixed(2)} Min: ${min.toFixed(2)}`;
+            var text3 = `Area: ${area.toFixed(3)} cm²`;
+            
+
+            var textWidth = Math.max(ctx.measureText(text1).width, ctx.measureText(text2).width, 
+                                    ctx.measureText(text3).width);
+            
+            var textHeight = 3 * 14;  // 14px per line, and 5 lines in total
+
+            // Set the background color
+            ctx.fillStyle = "rgba(104, 56, 56, 0.6)";  // Semi-transparent black background
+            ctx.fillRect(centerX + 10, centerY + 10, textWidth + 20, textHeight + 10);  // Draw background rectangle
+
+            // Displaying ellipse data on the canvas
+            ctx.fillStyle = "yellow";  // Text color
+            ctx.fillText(text1, centerX + 20, centerY + 30);
+            ctx.fillText(text2, centerX + 20, centerY + 45);
+            ctx.fillText(text3, centerX + 20, centerY + 60);
+            
+        }
+        // Function to draw the points as circles on the canvas
+        function drawPoint(x, y) {
+            ctx.beginPath();
+            ctx.arc(x, y, 5, 0, Math.PI * 2, false); // Create a circle with radius 5
+            ctx.fillStyle = "yellow"; // Fill color for the point
+            ctx.fill(); // Fill the circle
+            ctx.stroke(); // Optional: to outline the circle
+        }
+        // Function to draw the polygon as the user clicks
+        function drawPolygonPreview() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear the canvas
+            ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height); // Redraw image
+            redrawCanvas(); // Redraw existing shapes
+
+            // Draw the polygon preview by connecting the points
+            ctx.beginPath();
+            ctx.moveTo(polygonPoints[0].x, polygonPoints[0].y);
+            for (var i = 1; i < polygonPoints.length; i++) {
+                ctx.lineTo(polygonPoints[i].x, polygonPoints[i].y);
+            }
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Draw the points
+            for (var i = 0; i < polygonPoints.length; i++) {
+                drawPoint(polygonPoints[i].x, polygonPoints[i].y); // Draw each point
+            }
+        }
+        // Function to draw the final polygon
+        function drawPolygon(points) {
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            for (var i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            ctx.lineTo(points[0].x, points[0].y); // Close the polygon
+            ctx.strokeStyle = 'green';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // Function to calculate the area of the polygon (using the Shoelace Theorem)
+        function calculatePolygonArea(points) {
+            var area = 0;
+            var n = points.length;
+
+            for (var i = 0; i < n; i++) {
+                var j = (i + 1) % n; // Next point index
+                area += points[i].x * points[j].y;
+                area -= points[j].x * points[i].y;
+            }
+            area = Math.abs(area) / 2; // Final area
+            displayPolygonData(points, area);
+        }
+
+        // Function to display polygon area and other data on the canvas
+        function displayPolygonData(points, area) {
+            var centerX = 0;
+            var centerY = 0;
+            for (var i = 0; i < points.length; i++) {
+                centerX += points[i].x;
+                centerY += points[i].y;
+            }
+            centerX /= points.length;
+            centerY /= points.length;
+
             ctx.fillStyle = "yellow";
             ctx.font = "14px Arial";
-                
-            // Displaying ellipse data on the canvas
-            ctx.fillText(`Mean: ${mean.toFixed(2)} SD: ${sd.toFixed(2)}`, centerX + 10, centerY + 10);
-            ctx.fillText(`Max: ${max.toFixed(2)} Min: ${min.toFixed(2)}`, centerX + 10, centerY + 25);
-            ctx.fillText(`Area: ${area.toFixed(3)} cm²`, centerX + 10, centerY + 40);
-            ctx.fillText(`Radius X: ${radiusX.toFixed(2)} px`, centerX + 10, centerY + 55);
-            ctx.fillText(`Radius Y: ${radiusY.toFixed(2)} px`, centerX + 10, centerY + 70);
+            ctx.fillText(`Area: ${area.toFixed(2)} cm²`, centerX + 10, centerY + 10);
         }
+
+
+
+
+
+
+
+
+
 
 
 
