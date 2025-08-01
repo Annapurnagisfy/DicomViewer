@@ -21,11 +21,87 @@
     <script src="https://unpkg.com/cornerstone-wado-image-loader"></script>
     <!-- DICOM Parser -->
     <script src="https://unpkg.com/dicom-parser"></script>
-    
+    <style>
+        /* Hover effect for the entire controls-right container */
+        
+
+        /* Hover effect for zoom, ruler, rotate, and download containers */
+        .zoom-container:hover,
+        .ruler-container:hover,
+        .rotate-container:hover,
+        .download-container:hover {
+            background-color: #90A4AE; /* A slightly darker shade */
+            animation: blink 1s ease-in-out infinite; /* Blinking effect */
+        }
+
+        /* Blinking animation for buttons */
+        {% comment %} @keyframes blink {
+            0% {
+                background-color: #1c0edfff;
+            }
+            50% {
+                background-color: #1c0edfff; /* Highlighted color */
+            }
+            100% {
+                background-color: #1c0edfff;
+            }
+        } {% endcomment %}
+
+        /* Dropdown menu items styling */
+        .dropdown-menu {
+            border-radius: 5px;
+            padding: 0;
+            background-color: #6e7c83; /* Dropdown menu background color */
+        }
+
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 15px;
+            font-size: 14px;
+            color: #ffffff;
+            text-decoration: none;
+        }
+
+        .dropdown-item i {
+            font-size: 18px;
+            margin-right: 10px;
+            transition: transform 0.2s ease-in-out, color 0.3s ease; /* Smooth transition */
+        }
+
+        /* Dropdown item hover effect */
+        .dropdown-item:hover {
+            background-color: #001d1917; /* Darker background for menu items on hover */
+            color: white;
+        }
+
+        .dropdown-item:active {
+            background-color: #6e7c83; /* Same color on active state */
+        }
+
+        /* Transition effect for icons */
+        .bi {
+            transition: transform 0.2s ease-in-out;
+        }
+
+        {% comment %} .zoom-container:hover .bi,
+        .ruler-container:hover .bi,
+        .rotate-container:hover .bi,
+        .download-container:hover .bi {
+            transform: scale(1.1); /* Slightly enlarge the icon */
+        } {% endcomment %}
+
+        /* Dropdown item icon hover effect */
+        .dropdown-item:hover i {
+            transform: scale(1.1); /* Slightly enlarge the icon in dropdown */
+            
+        }
+    </style>
+
 </head>
 <body>
     
-    <div class="controls-container" style="display: flex; gap: 20px; justify-content: flex-end;background-color: #6BE4F2 ;padding: 10px; ">
+    <div class="controls-container" style="display: flex; gap: 20px; justify-content: flex-end;background: linear-gradient(135deg, #3123b4ff, #6a4af9) ;padding: 10px; ">
        
         
         
@@ -33,57 +109,66 @@
         
         <div class="controls-right" style="display: flex; gap: 30px; align-items: center;">
             <!-- Zoom Icon and Dropdown -->
-            <div class="zoom-container"style="background-color: #B0BEC5; padding: 4px; border-radius: 5px;width:50px;height:50px;">
-                <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer;position: relative; right: -7px;" onclick="toggleZoomMenu()"></i>
-                
+            <div class="zoom-container" style="padding: 4px; border-radius: 5px; width: 50px; height: 50px; transition: background-color 0.3s;color: aliceblue;">
+                <i class="bi bi-zoom-in" style="font-size: 30px; cursor: pointer; position: relative; right: -7px;" onclick="toggleZoomMenu()"></i>
+
                 <!-- Zoom Dropdown Menu -->
-                <div id="zoom-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
-                    <a class="dropdown-item" href="#" onclick="setZoom100();">100% </a>
-                    <a class="dropdown-item" href="#" onclick="setZoom200();">200% </a>
-                    <a class="dropdown-item" href="#" onclick="setZoom400();">400% </a>
-                    <a class="dropdown-item" href="#" onclick="setZoom800();">800% </a>
-                    <a class="dropdown-item" href="#" onclick="zoomIn()">Zoom in </a>
-                    <a class="dropdown-item" href="#" onclick="zoomOut()">Zoom out</a>
-                    
-                    {% comment %} <a class="dropdown-item" href="#" onclick="resetZoom1()">Reset Zoom</a>  <!-- Reset to original size --> {% endcomment %}
+                <div id="zoom-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px; background: linear-gradient(135deg, #3123b4ff, #6a4af9); border-radius: 5px; padding: 0;">
+                    <a class="dropdown-item" href="#" onclick="setZoom100();">
+                        <i class="bi bi-zoom-in" style="font-size: 18px; margin-right: 8px;"></i>100%
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="setZoom200();">
+                        <i class="bi bi-zoom-in" style="font-size: 18px; margin-right: 8px;"></i>200%
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="setZoom400();">
+                        <i class="bi bi-zoom-in" style="font-size: 18px; margin-right: 8px;"></i>400%
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="setZoom800();">
+                        <i class="bi bi-zoom-in" style="font-size: 18px; margin-right: 8px;"></i>800%
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="zoomIn()">
+                        <i class="bi bi-plus-circle " style="font-size: 18px; margin-right: 8px;"></i>Zoom In
+                    </a>
+                    <a class="dropdown-item" href="#" onclick="zoomOut()">
+                        <i class="bi bi-dash-circle " style="font-size: 18px; margin-right: 8px;"></i>Zoom Out
+                    </a>
                 </div>
             </div>
 
             <!-- Ruler Icon and Dropdown Menu for Drawing/Erasing Lines -->
-            <div class="ruler-container"style="background-color: #B0BEC5; padding: 4px; border-radius: 5px;width:50px;height:50px;">
-                <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer;position: relative; right: -7px;" onclick="toggleRulerMenu()"></i>
+            <div class="ruler-container" style=" padding: 4px; border-radius: 5px; width: 50px; height: 50px; transition: background-color 0.3s;color: aliceblue;">
+                <i class="bi bi-rulers" style="font-size: 30px; cursor: pointer; position: relative; right: -7px;" onclick="toggleRulerMenu()"></i>
                 
                 <!-- Ruler Dropdown Menu -->
-                <div id="ruler-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;">
-                    
-                    <a class="dropdown-item" href="#" onclick="setMode('arrow')">Arrow</a>
-                    <a class="dropdown-item" href="#" onclick="setMode('draw')">Distance</a>
-                    <a class="dropdown-item" href="#" onclick="setMode('ellipse')">Ellipse</a>
-                    <a class="dropdown-item" href="#" onclick="setMode('rectangle')">Rectangle</a>
-                    {% comment %} <a class="dropdown-item" href="#" onclick="setMode('polygon')">Closed Polygon</a> {% endcomment %}
-                    {% comment %} <a class="dropdown-item" href="#" onclick="setMode('erase')">Erase Lines</a> {% endcomment %}
-                    <a class="dropdown-item" href="#" onclick="setMode('eraseAll')">Erase All Lines</a>
+                <div id="ruler-menu" class="dropdown-menu" style="display: none; position: absolute; z-index: 1000; margin-top: 10px;background: linear-gradient(135deg, #3123b4ff, #6a4af9);">
+                    <a class="dropdown-item" href="#" onclick="setMode('arrow')"><i class="bi bi-arrow-up-right me-2"></i>Arrow</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('draw')"><i class="bi bi-arrow-left-right me-2"></i>Distance</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('ellipse')"><i class="bi bi-circle me-2"></i>Ellipse</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('rectangle')"><i class="bi bi-square me-2"></i>Rectangle</a>
+                    <a class="dropdown-item" href="#" onclick="setMode('eraseAll')"><i class="bi bi-trash me-2"></i>Erase All Lines</a>
                 </div>
             </div>
 
-            <div class="rotate-container"style="background-color: #B0BEC5; padding: 4px; border-radius: 5px;width:50px;height:50px;">
-                <i class="bi bi-arrow-repeat" style="font-size: 30px; cursor: pointer;position: relative; right: -7px;" onclick="toggleRotateMenu()"></i>
+            <!-- Rotate Icon and Dropdown -->
+            <div class="rotate-container" style=" padding: 4px; border-radius: 5px; width: 50px; height: 50px; transition: background-color 0.3s;color: aliceblue;">
+                <i class="bi bi-arrow-repeat" style="font-size: 30px; cursor: pointer; position: relative; right: -7px;" onclick="toggleRotateMenu()"></i>
                 
                 <!-- Rotate Dropdown Menu -->
-                <div id="rotate-menu" class="dropdown-menu" style="display: none; position: relative;; z-index: 1000; margin-top: 10px;float: right">
-                    <a class="dropdown-item" href="#" onclick="rotateImageAnticlockwise()">Rotate 90° CCW</a>
-                    <a class="dropdown-item" href="#" onclick="rotateImage()">Rotate 90° CW</a>
-                    <a class="dropdown-item" href="#" onclick="rotateImage180()">Rotate 180°</a>
-                    <a class="dropdown-item" href="#" onclick="flipHorizontal()">Flip Horizontal</a>
-                    <a class="dropdown-item" href="#" onclick="flipVertical()">Flip Vertical</a>
-                    {% comment %} <a class="dropdown-item" href="#" onclick="clearTransformations()">Clear Transformations</a> {% endcomment %}
+                <div id="rotate-menu" class="dropdown-menu" style="display: none; position: relative; z-index: 1000; margin-top: 10px; float: right;background: linear-gradient(135deg, #3123b4ff, #6a4af9);">
+                    <a class="dropdown-item" href="#" onclick="rotateImageAnticlockwise()"><i class="bi bi-arrow-counterclockwise me-2"></i>Rotate 90° CCW</a>
+                    <a class="dropdown-item" href="#" onclick="rotateImage()"><i class="bi bi-arrow-clockwise me-2"></i>Rotate 90° CW</a>
+                    <a class="dropdown-item" href="#" onclick="rotateImage180()"><i class="bi bi-arrow-down-up me-2"></i>Rotate 180°</a>
+                    <a class="dropdown-item" href="#" onclick="flipHorizontal()"><i class="bi bi-arrow-left-right me-2"></i>Flip Horizontal</a>
+                    <a class="dropdown-item" href="#" onclick="flipVertical()"><i class="bi bi-arrow-down-up"></i>Flip Vertical</a>
                 </div>
             </div>
+
             <!-- Download Icon -->
-            <div class="download-container"style="background-color: #B0BEC5; padding: 4px; border-radius: 5px;width:50px;height:50px;">
-                <i class="bi bi-download" style="font-size: 30px; cursor: pointer;position: relative; right: -7px;" onclick="downloadImage()"></i>
+            <div class="download-container" style=" padding: 4px; border-radius: 5px; width: 50px; height: 50px; transition: background-color 0.3s;color: aliceblue;">
+                <i class="bi bi-download" style="font-size: 30px; cursor: pointer; position: relative; right: -7px;" onclick="downloadImage()"></i>
             </div>
         </div>
+
     </div>
 
 
