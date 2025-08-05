@@ -328,7 +328,12 @@
         <!-- Main Image Section -->
         <div class="main-image" style=" display: flex; justify-content: center; align-items: center;height: calc(100vh - 70px);background-color: #1e1e1e; background-size: cover; background-position: center center; flex-grow: 1; overflow: hidden;">
             <div id="image-container" style="position: relative; width: auto; height: auto;">
-            
+                <div id="pan-wrapper"
+                     style="position:relative; 
+                            display: inline-block;
+                            transform:translate(0,0);
+                            cursor: default;">
+                        
                 <img id="main-image" src=""  style="width:700px; height: auto;box-shadow: 0px 0px 2px; border-radius: 4px;">
                 <canvas id="canvas" style="position: absolute; top: 0; left: 0;cursor: default;"></canvas>
             </div>
@@ -341,6 +346,7 @@
         var canvas = document.getElementById('canvas');
         var ctx = canvas.getContext('2d');
         var mainImageElement = document.getElementById('main-image');
+        var panWrapper       = document.getElementById('pan-wrapper');
         var imageContainer = document.getElementById('image-container');
         var imageElement;
         var startX, startY, endX, endY;
@@ -358,6 +364,11 @@
         var polygonPoints = []; // Store points for polygon
         var polygons = []; // Store completed polygons
         var isDrawingPolygon = false; // Track whether polygon drawing is active
+        var isPanning = false;
+        var startX = 0, startY = 0;
+        var offsetX = 0, offsetY = 0;
+        var currentScale = 1;    // track zoom factor
+
 
         // Adjust canvas size to match the image size on load
         mainImageElement.onload = function() {
@@ -438,6 +449,40 @@
                 redrawCanvas(); // Redraw the lines for the new image
             });
         }
+        {% comment %} imageContainer.style.cursor = 'grab';
+        imageContainer.style.transform = 'translate(0,0)';
+
+        // start drag
+        imageContainer.addEventListener('mousedown', function(e) {
+            isPanning = true;
+            imageContainer.style.cursor = 'grabbing';
+            startX = e.clientX - offsetX;
+            startY = e.clientY - offsetY;
+        });
+
+        // pan on move
+        document.addEventListener('mousemove', function(e) {
+            if (!isPanning) return;
+            offsetX = e.clientX - startX;
+            offsetY = e.clientY - startY;
+            imageContainer.style.transform =
+            'translate(' + offsetX + 'px,' + offsetY + 'px)';
+        });
+
+        // end drag
+        document.addEventListener('mouseup', function() {
+            if (!isPanning) return;
+            isPanning = false;
+            imageContainer.style.cursor = 'grab';
+        });
+
+        // sync container size in your zoom functions:
+        function syncContainerSize(newW, newH) {
+            imageContainer.style.width  = newW + 'px';
+            imageContainer.style.height = newH + 'px';
+        } {% endcomment %}
+
+
 
         // Set the mode (draw or erase)
         function setMode(mode) {
@@ -482,6 +527,46 @@
             }
             var menu = document.getElementById("ruler-menu");
             menu.style.display = "none"; // Close the dropdown
+        }
+
+        // MOUSE DOWN → only if zoomed
+        panWrapper.addEventListener('mousedown', function(e) {
+            if (currentScale <= 1) return;
+            isPanning = true;
+            panWrapper.style.cursor = 'grabbing';
+            startX = e.clientX - offsetX;
+            startY = e.clientY - offsetY;
+        });
+
+        // MOUSE MOVE → only if dragging
+        document.addEventListener('mousemove', function(e) {
+            if (!isPanning) return;
+            offsetX = e.clientX - startX;
+            offsetY = e.clientY - startY;
+            panWrapper.style.transform = 
+                'translate(' + offsetX + 'px,' + offsetY + 'px)';
+        });
+
+        // MOUSE UP → end drag
+        document.addEventListener('mouseup', function() {
+            if (!isPanning) return;
+            isPanning = false;
+            panWrapper.style.cursor = (currentScale > 1 ? 'grab' : 'default');
+        });
+
+        // Helper to size & enable panning after each zoom
+        function syncContainerSize(newW, newH) {
+            // resize the pan wrapper so the image+canvas area matches
+            panWrapper.style.width  = newW + 'px';
+            panWrapper.style.height = newH + 'px';
+            // if zoomed, show grab; if not, reset everything
+            if (currentScale > 1) {
+                panWrapper.style.cursor = 'grab';
+            } else {
+                offsetX = offsetY = 0;
+                panWrapper.style.transform = 'translate(0,0)';
+                panWrapper.style.cursor = 'default';
+            }
         }
 
         // Clear the canvas (erase all lines)
@@ -1020,6 +1105,9 @@
             ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
             redrawCanvas();  // Redraw any existing lines, ellipses, etc.
 
+            currentScale = 1;
+            syncContainerSize(originalWidth, originalHeight);
+
             console.log("Zoom set to 100%. Image width: " + originalWidth + "px, Image height: " + originalHeight + "px");
         }
         function setZoom200() {
@@ -1047,6 +1135,9 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before redrawing
             ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
             redrawCanvas();  // Redraw any existing lines, ellipses, etc.
+
+            currentScale = 2;
+            syncContainerSize(newWidth, newHeight);
 
             console.log("Zoom set to 200%. Image width: " + newWidth + "px, Image height: " + newHeight + "px");
         }
@@ -1076,6 +1167,11 @@
             ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
             redrawCanvas();  // Redraw any existing lines, ellipses, etc.
 
+            currentScale = 4;
+            syncContainerSize(newWidth, newHeight);
+
+            
+
             console.log("Zoom set to 400%. Image width: " + newWidth + "px, Image height: " + newHeight + "px");
         }
         function setZoom800() {
@@ -1103,6 +1199,9 @@
             ctx.clearRect(0, 0, canvas.width, canvas.height);  // Clear canvas before redrawing
             ctx.drawImage(mainImageElement, 0, 0, canvas.width, canvas.height);  // Redraw image
             redrawCanvas();  // Redraw any existing lines, ellipses, etc.
+
+            currentScale = 8;
+            syncContainerSize(newWidth, newHeight);
 
             console.log("Zoom set to 800%. Image width: " + newWidth + "px, Image height: " + newHeight + "px");
         }
